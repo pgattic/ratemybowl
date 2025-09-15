@@ -30,6 +30,7 @@ outputs = { self, nixpkgs, flake-utils }:
             flutter
             androidSdk # The customized SDK that we've made above
             jdk17
+            firebase-tools
           ];
         };
     });
