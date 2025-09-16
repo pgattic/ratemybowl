@@ -21,27 +21,51 @@ In addition, the following general information will be gathered about each restr
 
 ## Roadmap
 
+### Project Requirements
+
+- [ ] Get everyone set up with a working development environment
 - [ ] Firebase
     - [ ] How to create user accounts for application
-    - [ ] Firebase SQL Relationship map
+    - [ ] Define structure of data to be stored on the server
 - [ ] Flutter
-    - [ ] Learn how to make it talk to our firebase
+    - [ ] Get everyone familiar with Flutter basics (Excellent tutorial [here](https://youtu.be/1xipg02Wu8s))
+    - [ ] Learn how to [make Flutter talk to Firebase](https://firebase.google.com/docs/flutter/setup)
     - [ ] Find a secrets management system so we aren't publishing access keys
-    - [ ] Determine Flutter Map library
+    - [ ] Create Login Screen
+    - [ ] Create Home Screen
+    - [ ] Create Map Screen (using [this library](https://pub.dev/packages/flutter_map))
         - [ ] Find how to render custom widgets to it
+    - [ ] Create Account Screen
+    - [ ] Create Reviewing Screen
+        - [ ] Rating up to 5 stars
+        - [ ] Toilet paper quality (like, dislike or neutral)
+        - [ ] Notes about the restroom (text)
+    - [ ] General data aggregation feature
+        - [ ] How will it work? Where/when will the question get asked?
+        - [ ] Type of sink (automatic with a sensor or manual with knobs)
+        - [ ] Hand-drying options (air blower, paper towel, or both)
+        - [ ] Does it require a key (i.e. from the receptionist's desk)
+
+### Stretch Goals
+
+- [ ] Selectively load restroom information where the map is focused to (just getting all the data from the server is not great)
+- [ ] Google Account integration (could actually be easy)
+- [ ] Use Google Maps Flutter library: https://pub.dev/packages/google_maps_flutter
 
 ## Dev Environment
 
 ### Nix (with Flakes enabled)
 
-- Ensure an Android emulator or ADB is configured.
+- Ensure an [Android emulator or ADB](https://nixos.wiki/wiki/Android) is configured.
 - `nix develop`
 
 ### Windows
 
 - Follow the [Windows -> Android instructions](https://docs.flutter.dev/get-started/install/windows/mobile) on the Flutter documentation
+- Install the [Firebase CLI](https://firebase.google.com/docs/cli)
 
 ### MacOS
 
-- Follow the [MacOS -> Android instructions](https://docs.flutter.dev/get-started/install/macos/mobile-android) on the Flutter Documentation
+- Follow the [MacOS instructions](https://docs.flutter.dev/get-started/install/macos) on the Flutter Documentation (choose between iOS and Android)
+- Install the [Firebase CLI](https://firebase.google.com/docs/cli)
 
