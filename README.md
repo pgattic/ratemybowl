@@ -69,3 +69,10 @@ In addition, the following general information will be gathered about each restr
 - Follow the [MacOS instructions](https://docs.flutter.dev/get-started/install/macos) on the Flutter Documentation (choose between iOS and Android)
 - Install the [Firebase CLI](https://firebase.google.com/docs/cli)
 
+## Contributing
+
+- Please DO NOT COMMIT DIRECTLY TO MASTER
+    - This *will* result in merge conflicts
+    - Either create a new branch for a specific feature you're working on, or maintain your personal branch that you merge into master from
+- Before making any pull requests to Master, ensure that you are able to run `flutter clean` and `flutter run` without any compilation issues or instant crashes. Thank you!
+
