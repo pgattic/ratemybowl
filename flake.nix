@@ -27,7 +27,7 @@
           platform-tools
           platforms-android-36
           emulator
-          ndk-26-1-10909125
+          ndk-27-0-12077973
           # include system image inside SDK instead of relying on sdkmanager. This ensures emulator functionality.
           system-images-android-36-google-apis-playstore-x86-64
         ]) // {
@@ -44,7 +44,7 @@
 
         wrappedEmulator = pkgs.writeShellScriptBin "run-emulator" ''
           #!/usr/bin/env bash
-          echo "Launching emulator with universal Qt/X11/Wayland fix..."
+          echo "Launching emulator ..."
 
           # ----------------------------
           # Detect display server
@@ -71,33 +71,84 @@
           export QT_OPENGL=desktop
           export QT_QPA_PLATFORMTHEME=gtk3
 
-          # Input/accessibility fixes
+          # Input/accessibility fixes - CRITICAL FOR KEYBOARD INPUT
           export QT_ACCESSIBILITY=1
           export QT_IM_MODULE=compose
           export XMODIFIERS=@im=none
           export GTK_IM_MODULE=gtk-im-context-simple
-          # Fix for hardware button input events
-          export QT_LOGGING_RULES="qt.qpa.input=false"
-          export QT_QPA_GENERIC_PLUGINS=evdevmouse,evdevkeyboard
+          # Enhanced input device configuration
+          export QT_LOGGING_RULES="qt.qpa.input=true;qt.qpa.input.events=true"
+          export QT_QPA_GENERIC_PLUGINS=""
+          # Allow Qt to use system input instead of forcing evdev
+          export QT_QPA_ENABLE_TERMINAL_KEYBOARD=1
+
+          # X11 input settings
+          export SDL_VIDEODRIVER=x11
+          export XKB_DEFAULT_LAYOUT=us
+
           # ----------------------------
           # Graphics / OpenGL driver
           # ----------------------------
+          LD_PATH_BASE="$FHS_LIB/usr/lib"
+
           if [ -d "/run/opengl-driver" ]; then
               echo "✅ NVIDIA/OpenGL driver detected"
+              LD_PATH_BASE="$FHS_LIB/usr/lib"
               export LD_LIBRARY_PATH="/run/opengl-driver/lib:$LD_LIBRARY_PATH"
               export LIBGL_DRIVERS_PATH="/run/opengl-driver/lib/dri"
               export MESA_LOADER_DRIVER_OVERRIDE=""
           else
               echo "⚠️ NVIDIA driver not found, using Mesa fallback"
+              LD_PATH_BASE="$FHS_LIB/usr/lib"
               export LD_LIBRARY_PATH="${pkgs.mesa}/lib:${pkgs.libdrm}/lib:${pkgs.vulkan-loader}/lib:$LD_LIBRARY_PATH"
-              export LIBGL_DRIVERS_PATH="${pkgs.mesa}/lib/dri" w
+              export LIBGL_DRIVERS_PATH="${pkgs.mesa}/lib/dri"
               export MESA_LOADER_DRIVER_OVERRIDE=i965
           fi
 
+
+          # ---------------------------------------------
+          # Physical Keyboard & side panel Functionality
+          # ---------------------------------------------
+          # Check home directory AVD
+          HOME_EMULATOR_CONFIG_DIR="$HOME/.android/avd/android_emulator.avd"
+          if [ -d "$HOME_EMULATOR_CONFIG_DIR" ]; then
+            echo "📝 Found AVD in home directory: $HOME_EMULATOR_CONFIG_DIR"
+
+            # Update home directory config.ini
+            if [ -f "$HOME_EMULATOR_CONFIG_DIR/config.ini" ]; then
+              if grep -q "^hw\.keyboard\s*=" "$HOME_EMULATOR_CONFIG_DIR/config.ini"; then
+                sed -i 's/^hw\.keyboard\s*=.*/hw.keyboard=yes/' "$HOME_EMULATOR_CONFIG_DIR/config.ini"
+              else
+                echo "hw.keyboard=yes" >> "$HOME_EMULATOR_CONFIG_DIR/config.ini"
+              fi
+
+              if grep -q "^hw\.mainKeys\s*=" "$HOME_EMULATOR_CONFIG_DIR/config.ini"; then
+                sed -i 's/^hw\.mainKeys\s*=.*/hw.mainKeys=yes/' "$HOME_EMULATOR_CONFIG_DIR/config.ini"
+              else
+                echo "hw.mainKeys=yes" >> "$HOME_EMULATOR_CONFIG_DIR/config.ini"
+              fi
+
+              if grep -q "^hw\.dPad\s*=" "$HOME_EMULATOR_CONFIG_DIR/config.ini"; then
+                sed -i 's/^hw\.dPad\s*=.*/hw.dPad=yes/' "$HOME_EMULATOR_CONFIG_DIR/config.ini"
+              else
+                echo "hw.dPad=yes" >> "$HOME_EMULATOR_CONFIG_DIR/config.ini"
+              fi
+              echo "✅ Updated home directory emulator configuration"
+            fi
+          fi
+
           # ----------------------------
-          # Run the emulator
+          # Run the emulator with enhanced input options
           # ----------------------------
-          exec emulator -avd android_emulator -gpu host -no-snapshot -no-snapshot-load -no-snapshot-save "$@"
+          exec emulator -avd android_emulator \
+            -gpu host \
+            -no-snapshot \
+            -no-snapshot-load \
+            -no-snapshot-save \
+            -port 5554 \
+            -grpc 8554 \
+            -qemu -enable-kvm \
+            "$@"
         '';
 
         # Patched Flutter derivation.
@@ -127,6 +178,7 @@
         minSdkVersion = "21";
         kotlinVersion = "2.0.21";
         agpVersion = "8.12.3"; # Android Gradle Plugin
+        ndkVersion = "27.0.12077973";
 
       in
       {
@@ -148,6 +200,7 @@
 
             # Android SDK components and environment
             androidEnv
+            patchelf
 
             # Core runtime libraries
             glibc
@@ -311,6 +364,8 @@
             export PATH="${pkgs.cmake}/bin:${pkgs.ninja}/bin:$PATH"
             # Prepend to LD_LIBRARY_PATH so emulator sees these first
             export LD_LIBRARY_PATH="$FHS_LIB/usr/lib:$LD_LIBRARY_PATH"
+            export ANDROID_EMULATOR_HOME="$PWD/.android"
+
             echo "✅ FHS graphics symlinks initialized at $FHS_LIB"
             echo "⚡ Fast shell entry - Flutter environment ready!"
             echo "👉 To launch the emulator, run:"
@@ -362,11 +417,12 @@
             echo "Created cmake symlink: $ANDROID_HOME/cmake/3.22.1/bin/cmake -> $(which cmake)"
 
             chmod -R u+w "$ANDROID_HOME"
-            find "$ANDROID_HOME/bin" "$ANDROID_HOME/platform-tools" "$ANDROID_HOME/emulator" \
-            "$ANDROID_HOME/cmdline-tools/latest/bin" "$ANDROID_HOME/build-tools" \
-            "$ANDROID_HOME/platforms" "$ANDROID_HOME/ndk" -type f -exec chmod +x {} \;
 
-            # Accept licenses
+            find "$ANDROID_HOME/bin" "$ANDROID_HOME/platform-tools" \
+                 "$ANDROID_HOME/emulator" "$ANDROID_HOME/cmdline-tools/latest/bin" \
+                 "$ANDROID_HOME/build-tools" "$ANDROID_HOME/platforms" \
+                 "$ANDROID_HOME/ndk" -type f -exec chmod +x {} \; 2>/dev/null || true
+            # Accept SDK licenses
             for license in android-sdk-license android-sdk-preview-license googletv-license; do
               touch "$ANDROID_HOME/licenses/$license"
             done
@@ -402,8 +458,6 @@
               echo "android.cmake.path=${pkgs.cmake}/bin" >> android/gradle.properties
               echo "android.ninja.path=${pkgs.ninja}/bin" >> android/gradle.properties
               echo "android.cmake.version=" >> android/gradle.properties
-
-              # ALSO ADD CMAKE_MAKE_PROGRAM override
               echo "android.cmake.makeProgram=${pkgs.ninja}/bin/ninja" >> android/gradle.properties
             fi
 
@@ -424,10 +478,17 @@
               echo "⚙️ Pinning Android build tool versions in Groovy DSL..."
               sed -i -e "s/com.android.application.*version.*'[0-9.]*'/com.android.application' version '${agpVersion}'/g" android/build.gradle
               sed -i -e "s/org.jetbrains.kotlin.android.*version.*'[0-9.]*'/org.jetbrains.kotlin.android' version '${kotlinVersion}'/g" android/build.gradle
+              sed -i -e "s/minSdkVersion [0-9]*/minSdkVersion ${minSdkVersion}/g" android/app/build.gradle
             fi
 
-            if [ -f "android/app/build.gradle" ]; then
-              sed -i -e "s/minSdkVersion [0-9]*/minSdkVersion ${minSdkVersion}/g" android/app/build.gradle
+            #Pin NDK version in Gradle build files
+            if [ -f "android/app/build.gradle.kts" ]; then
+              sed -i '/ndkVersion\s*=/d' android/app/build.gradle.kts
+              if grep -q "android\s*{" android/app/build.gradle.kts; then
+                sed -i "/android\s*{/a \    ndkVersion = \"${ndkVersion}\"" android/app/build.gradle.kts
+              else
+                echo -e "\nandroid {\n    ndkVersion = \"${ndkVersion}\"\n}" >> android/app/build.gradle.kts
+              fi
             fi
 
             # Create AVD if missing
@@ -442,6 +503,32 @@
               --force
             fi
 
+            # Configure AVD hardware settings (also runs on existing AVDs)
+            HOME_AVD_CONFIG="$HOME/.android/avd/android_emulator.avd/config.ini"
+            if [ -f "$HOME_AVD_CONFIG" ]; then
+              echo "Configuring home directory AVD..."
+
+              if grep -q "^hw\.keyboard\s*=" "$HOME_AVD_CONFIG"; then
+                sed -i 's/^hw\.keyboard\s*=.*/hw.keyboard=yes/' "$HOME_AVD_CONFIG"
+              else
+                echo "hw.keyboard=yes" >> "$HOME_AVD_CONFIG"
+              fi
+
+              if grep -q "^hw\.mainKeys\s*=" "$HOME_AVD_CONFIG"; then
+                sed -i 's/^hw\.mainKeys\s*=.*/hw.mainKeys=yes/' "$HOME_AVD_CONFIG"
+              else
+                echo "hw.mainKeys=yes" >> "$HOME_AVD_CONFIG"
+              fi
+
+              if grep -q "^hw\.dPad\s*=" "$HOME_AVD_CONFIG"; then
+                sed -i 's/^hw\.dPad\s*=.*/hw.dPad=yes/' "$HOME_AVD_CONFIG"
+              else
+                echo "hw.dPad=yes" >> "$HOME_AVD_CONFIG"
+              fi
+
+              echo "✅ Home directory AVD configured for full emulator functionality"
+            fi
+
             # PATH and tool verification
             export PATH="${pkgs.cmake}/bin:${pkgs.ninja}/bin:$PATH"
 
@@ -454,7 +541,9 @@
 
             # Mark environment as ready for fast path next time
             touch "$PWD/.flutter_env_ready"
-            echo ".flutter_env_ready" >> .gitignore
+            if ! grep -qxF ".flutter_env_ready" .gitignore; then
+              echo ".flutter_env_ready" >> .gitignore
+            fi
 
             echo "👉 To launch the emulator, run:"
             echo "    run-emulator"
