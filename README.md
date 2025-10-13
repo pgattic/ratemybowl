@@ -27,8 +27,9 @@ The Roadmap can be viewed [here](roadmap.md).
 
 ### Nix (with Flakes enabled)
 
-- Ensure an [Android emulator or ADB](https://nixos.wiki/wiki/Android) is configured.
 - `nix develop`
+
+This will provide a dev shell with a preconfigured Android emulator and system image, Flutter, Android SDK and cmdline-tools, the `firebase-tools` package, and more. Thanks to PlayXDead for his awesome [example flake](https://github.com/PlayXDead/nix-flake-flutter-android-dev-env), off of which ours is based ([Reddit post](https://www.reddit.com/r/NixOS/comments/1ngt889/my_first_flake_flutterandroid_dev_enviroment_with/)).
 
 ### Windows
 
