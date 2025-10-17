@@ -14,14 +14,13 @@ class AccountInputField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextField(
-      obscureText: this.obscureText,
+      obscureText: obscureText,
       decoration: InputDecoration(
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(50.0),
         ),
-        hintText: this.hintText,
+        hintText: hintText,
         hintStyle: GoogleFonts.quicksand(
-          // fontSize: 36.0,
           fontWeight: FontWeight.bold,
           color: Colors.grey,
         ),
