@@ -11,12 +11,10 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthService>(
       builder: (context, authService, child) {
-        // Show login screen if not authenticated
         if (!authService.isAuthenticated) {
           return const LoginScreen();
         }
         
-        // Show home screen if authenticated
         return const HomeScreen();
       },
     );

@@ -7,12 +7,11 @@ class AuthService extends ChangeNotifier {
   bool get isAuthenticated => _isAuthenticated;
   String? get username => _username;
 
-  // Simulate login process
   Future<bool> login(String username, String password) async {
     // Simulate API call delay
     await Future.delayed(const Duration(seconds: 1));
     
-    // Simple validation - in a real app, this would call your backend
+    // Replace once we have a backend
     if (username.isNotEmpty && password.isNotEmpty) {
       _isAuthenticated = true;
       _username = username;
@@ -22,17 +21,14 @@ class AuthService extends ChangeNotifier {
     return false;
   }
 
-  // Logout function
   void logout() {
     _isAuthenticated = false;
     _username = null;
     notifyListeners();
   }
 
-  // Check if user is already authenticated (useful for app startup)
   void checkAuthStatus() {
-    // In a real app, you might check stored tokens or credentials here
-    // For now, we'll start with unauthenticated state
+    // Once we have a backend, this will check the server for the user's authentication status. For now, we'll start with unauthenticated state.
     _isAuthenticated = false;
     _username = null;
     notifyListeners();
