@@ -56,14 +56,13 @@ class BathroomPin extends StatelessWidget {
       child: Container(
         width: isSelected ? 40 : 32,
         height: isSelected ? 50 : 40,
-        child: Stack(
-          children: [
-            SvgPicture.asset(
-              _getSvgAssetPath(),
-              width: isSelected ? 40 : 32,
-              height: isSelected ? 50 : 40,
-            ),
-          ],
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: SvgPicture.asset(
+            _getSvgAssetPath(),
+            width: isSelected ? 40 : 32,
+            height: isSelected ? 50 : 40,
+          ),
         ),
       ),
     );
