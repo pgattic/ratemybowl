@@ -9,7 +9,7 @@ enum BathroomType {
 
 class BathroomPin extends StatelessWidget {
   final List<BathroomType> bathroomTypes;
-  final bool isSelected;
+  final bool isSelected; // not doing anything with this yet, but I added it in just in case we want to change the icon when selected or something
   final VoidCallback? onTap;
 
   const BathroomPin({
@@ -51,17 +51,15 @@ class BathroomPin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pinWidth = isSelected ? 40.0 : 32.0;
-    final pinHeight = isSelected ? 50.0 : 40.0;
+    final iconPath = _getSvgAssetPath();
+    final pinHeight = 50.0; // if we swap out the icon SVGs, we'll need to adjust this value to match the new height
     
     return GestureDetector(
       onTap: onTap,
       child: Transform.translate(
         offset: Offset(0, pinHeight / -2.0),
         child: SvgPicture.asset(
-          _getSvgAssetPath(),
-          width: pinWidth,
-          height: pinHeight,
+          iconPath,
         ),
       ),
     );
