@@ -23,13 +23,12 @@ class _MapScreenState extends State<MapScreen> {
         initialCenter: const LatLng(40.24875188987069, -111.65141681875589), // JFSB coordinates (where we'll be demoing). Eventually, this will be dynamic based on the user's location.
         initialZoom: 18.0,
         minZoom: 3.0,
-        maxZoom: 18.0,
+        maxZoom: 24.0,
       ),
       children: [
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.example.rate_my_bowl',
-          maxZoom: 18,
         ),
         MarkerLayer(
           markers: bathroomLocations.map((location) {

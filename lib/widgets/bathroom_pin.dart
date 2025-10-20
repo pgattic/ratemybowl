@@ -51,18 +51,17 @@ class BathroomPin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pinWidth = isSelected ? 40.0 : 32.0;
+    final pinHeight = isSelected ? 50.0 : 40.0;
+    
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: isSelected ? 40 : 32,
-        height: isSelected ? 50 : 40,
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: SvgPicture.asset(
-            _getSvgAssetPath(),
-            width: isSelected ? 40 : 32,
-            height: isSelected ? 50 : 40,
-          ),
+      child: Transform.translate(
+        offset: Offset(0, pinHeight / -2.0),
+        child: SvgPicture.asset(
+          _getSvgAssetPath(),
+          width: pinWidth,
+          height: pinHeight,
         ),
       ),
     );
