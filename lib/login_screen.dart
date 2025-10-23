@@ -3,8 +3,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/custom_widgets/account_input_field.dart';
-import 'package:rate_my_bowl/screens/home_screen.dart';
 import 'package:rate_my_bowl/services/auth_service.dart';
+import 'package:rate_my_bowl/widgets/auth_wrapper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(builder: (context) => const SignupScreen()),
                       );
@@ -245,6 +245,7 @@ class _SignupScreenState extends State<SignupScreen> {
           backgroundColor: Colors.red,
         ),
       );
+      return;
     }
 
     setState(() {
@@ -253,18 +254,26 @@ class _SignupScreenState extends State<SignupScreen> {
 
     try {
       final authService = context.read<AuthService>();
-      await authService.signup(
+      final success = await authService.signup(
         _emailController.text,
         _passwordController.text,
       );
       
-
-      //navigate to homescreen
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      if (success) {
+        // Navigate back to root so AuthWrapper can show HomeScreen
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const AuthWrapper()),
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Signup failed. Please try again."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -278,7 +287,5 @@ class _SignupScreenState extends State<SignupScreen> {
         _isLoading = false;
       });
     }
-
-   
   }
 }
