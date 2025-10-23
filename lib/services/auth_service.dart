@@ -1,20 +1,21 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService extends ChangeNotifier {
   bool _isAuthenticated = false;
-  String? _username;
+  String? _email;
 
   bool get isAuthenticated => _isAuthenticated;
-  String? get username => _username;
+  String? get email => _email;
 
-  Future<bool> login(String username, String password) async {
+  Future<bool> login(String email, String password) async {
     // Simulate API call delay
     await Future.delayed(const Duration(seconds: 1));
     
     // Replace once we have a backend
-    if (username.isNotEmpty && password.isNotEmpty) {
+    if (email.isNotEmpty && password.isNotEmpty) {
       _isAuthenticated = true;
-      _username = username;
+      _email = email;
       notifyListeners();
       return true;
     }
@@ -23,14 +24,29 @@ class AuthService extends ChangeNotifier {
 
   void logout() {
     _isAuthenticated = false;
-    _username = null;
+    _email = null;
     notifyListeners();
   }
 
   void checkAuthStatus() {
-    // Once we have a backend, this will check the server for the user's authentication status. For now, we'll start with unauthenticated state.
-    _isAuthenticated = false;
-    _username = null;
-    notifyListeners();
+    final session = Supabase.instance.client.auth.currentSession;
+    
+    if (session != null) {
+      _isAuthenticated = true;
+      _email = session.user.email;
+      notifyListeners();
+    }
+    else {
+      _isAuthenticated = false;
+      _email = null;
+      notifyListeners();
+    }
+  }
+
+  Future<AuthResponse> signup(String email, String password) async {
+    return await Supabase.instance.client.auth.signUp(
+      email: email,
+      password: password,
+    );
   }
 }
