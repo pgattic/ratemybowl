@@ -23,6 +23,7 @@ class AuthService extends ChangeNotifier {
   }
 
   void logout() {
+    Supabase.instance.client.auth.signOut();
     _isAuthenticated = false;
     _email = null;
     notifyListeners();
