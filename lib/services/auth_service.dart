@@ -10,9 +10,21 @@ class AuthService extends ChangeNotifier {
   Future<bool> login(String username, String password) async {
     // Simulate API call delay
     await Future.delayed(const Duration(seconds: 1));
-    
+
     // Replace once we have a backend
     if (username.isNotEmpty && password.isNotEmpty) {
+      _isAuthenticated = true;
+      _username = username;
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> register(String email, String username, String password) async {
+    await Future.delayed(const Duration(seconds: 1));
+
+    if (email.isNotEmpty && username.isNotEmpty && password.isNotEmpty) {
       _isAuthenticated = true;
       _username = username;
       notifyListeners();
