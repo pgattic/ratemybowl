@@ -3,10 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/svg.dart';
 
 class RateMyBowlLogo extends StatelessWidget {
-  const RateMyBowlLogo({super.key});
+  final Color? textColor; // optional color
+
+  const RateMyBowlLogo({super.key, this.textColor});
 
   @override
   Widget build(BuildContext context) {
+    final color = textColor ?? Colors.white; // default to white
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -15,16 +18,21 @@ class RateMyBowlLogo extends StatelessWidget {
           style: GoogleFonts.quicksand(
             fontSize: 36,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: color,
           ),
         ),
-        SvgPicture.asset("assets/toilet.svg", width: 32, height: 32),
+        SvgPicture.asset(
+          "assets/toilet.svg",
+          width: 32,
+          height: 32,
+          colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+        ),
         Text(
           "owl",
           style: GoogleFonts.quicksand(
             fontSize: 36,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: color,
           ),
         ),
       ],
