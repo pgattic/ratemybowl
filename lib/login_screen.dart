@@ -12,9 +12,12 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  late AnimationController _fadeInController;
+  late Animation<double> _fadeInAnimation;
   bool _isLoading = false;
 
   Future<void> _handleLogin() async {
@@ -62,7 +65,25 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _fadeInController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+
+    _fadeInAnimation = CurvedAnimation(
+      parent: _fadeInController,
+      curve: Curves.easeInOut,
+    );
+
+    // Start the fade-in animation when the screen first loads
+    _fadeInController.forward();
+  }
+
+  @override
   void dispose() {
+    _fadeInController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -88,12 +109,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
-                    "rate my "
+                    "rate my ",
                   ),
                   SvgPicture.asset(
                     width: 16.0,
                     height: 32.0,
-                    "assets/toilet.svg"
+                    "assets/toilet.svg",
                   ),
                   Text(
                     style: GoogleFonts.quicksand(
@@ -101,55 +122,65 @@ class _LoginScreenState extends State<LoginScreen> {
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
-                    "owl"
+                    "owl",
                   ),
                 ],
               ),
-              AccountInputField(
-                hintText: "username",
-                controller: _usernameController,
-              ),
-              AccountInputField(
-                hintText: "password",
-                obscureText: true,
-                controller: _passwordController,
-              ),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _handleLogin,
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              FadeTransition(
+                opacity: _fadeInAnimation,
+                child: Column(
+                  spacing: 16.0,
+                  children: [
+                    AccountInputField(
+                      hintText: "username",
+                      controller: _usernameController,
+                    ),
+                    AccountInputField(
+                      hintText: "password",
+                      obscureText: true,
+                      controller: _passwordController,
+                    ),
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _handleLogin,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Text("log in"),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "create an account",
+                          style: GoogleFonts.quicksand(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
-                      )
-                    : const Text("log in"),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "create an account",
-                    style: GoogleFonts.quicksand(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                        Text(
+                          "forgot my password",
+                          style: GoogleFonts.quicksand(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Text(
-                    "forgot my password",
-                    style: GoogleFonts.quicksand(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
         ),
-      )
+      ),
     );
   }
 }
