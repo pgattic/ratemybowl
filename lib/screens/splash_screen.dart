@@ -14,17 +14,17 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   late AnimationController _logoController;
-  late Animation<Alignment> _alignAnimation;
+  late Animation<Offset> _slideAnimation;
 
   bool _showLogo = false;
   bool _waterFull = false;
 
-  // Initialize
   @override
   void initState() {
     super.initState();
     _initializeLogoAnimation();
 
+    // Delay before logo fades in
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (!mounted) return;
       setState(() {
@@ -39,10 +39,11 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 1000),
     );
 
-    _alignAnimation =
-        AlignmentTween(
-          begin: Alignment.center,
-          end: const Alignment(0, -0.395),
+    // Use a proportional slide (consistent across all screens)
+    _slideAnimation =
+        Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(0, -2.385), // move up 25% of its height
         ).animate(
           CurvedAnimation(parent: _logoController, curve: Curves.easeInOut),
         );
@@ -84,16 +85,15 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
 
-          // Logo
-          AnimatedOpacity(
-            opacity: _showLogo ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 1500),
-            child: AnimatedBuilder(
-              animation: _logoController,
-              builder: (context, child) {
-                return Align(alignment: _alignAnimation.value, child: child);
-              },
-              child: const RateMyBowlLogo(),
+          // Centered logo with fade + consistent slide animation
+          Center(
+            child: AnimatedOpacity(
+              opacity: _showLogo ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 1500),
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: const RateMyBowlLogo(),
+              ),
             ),
           ),
         ],
