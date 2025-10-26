@@ -1,123 +1,102 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:rate_my_bowl/widgets/bowl_logo.dart';
+import 'package:rate_my_bowl/widgets/splash_animation.dart';
 
 class SplashScreen extends StatefulWidget {
   final VoidCallback onAnimationComplete;
-  
-  const SplashScreen({
-    super.key,
-    required this.onAnimationComplete,
-  });
+
+  const SplashScreen({super.key, required this.onAnimationComplete});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  late VideoPlayerController _controller;
-  bool _isLoading = true;
-  bool _hasError = false;
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _logoController;
+  late Animation<Offset> _slideAnimation;
+
+  bool _showLogo = false;
+  bool _waterFull = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeVideo();
+    _initializeLogoAnimation();
+
+    // Delay before logo fades in
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (!mounted) return;
+      setState(() {
+        _showLogo = true;
+      });
+    });
   }
 
-  Future<void> _initializeVideo() async {
-    try {
-      _controller = VideoPlayerController.asset('assets/splash_animation.mov');
-      
-      await _controller.initialize();
-      
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        
-        // Play the video
-        await _controller.play();
-        
-        // Listen for when the video ends
-        _controller.addListener(() {
-          if (_controller.value.position >= _controller.value.duration) {
-            widget.onAnimationComplete();
-          }
-        });
-      }
-    } catch (e) {
-      // If there's an error loading the video, show error and proceed after delay
-      if (mounted) {
-        setState(() {
-          _hasError = true;
-          _isLoading = false;
-        });
-        
-        // Wait a bit then proceed anyway
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            widget.onAnimationComplete();
-          }
-        });
-      }
-    }
+  void _initializeLogoAnimation() {
+    _logoController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    // Use a proportional slide (consistent across all screens)
+    _slideAnimation =
+        Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(0, -2.385), // move up 25% of its height
+        ).animate(
+          CurvedAnimation(parent: _logoController, curve: Curves.easeInOut),
+        );
+  }
+
+  Future<void> _playLogoAnimation() async {
+    if (mounted) await _logoController.forward();
+  }
+
+  Future<void> _startLogoSequence() async {
+    await _playLogoAnimation();
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (mounted) widget.onAnimationComplete();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _logoController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.lightBlueAccent,
-      body: Center(
-        child: _isLoading
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    strokeWidth: 3,
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Loading RateMyBowl',
-                    style: GoogleFonts.quicksand(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              )
-            : _hasError
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.play_circle_outline,
-                        size: 80,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Welcome to RateMyBowl',
-                        style: GoogleFonts.quicksand(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  )
-                : AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: VideoPlayer(_controller),
-                  ),
+      backgroundColor: _waterFull ? Colors.lightBlueAccent : Colors.white,
+      body: Stack(
+        children: [
+          // Water animation
+          Positioned.fill(
+            child: SplashAnimation(
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+              onFull: () {
+                if (!mounted) return;
+                setState(() => _waterFull = true);
+                _startLogoSequence();
+              },
+            ),
+          ),
+
+          // Centered logo with fade + consistent slide animation
+          Center(
+            child: AnimatedOpacity(
+              opacity: _showLogo ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 1500),
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: const RateMyBowlLogo(),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
