@@ -11,9 +11,6 @@ void main() async {
 
 
     await dotenv.load();
-
-
-  await dotenv.load();
   
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
