@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen>
     _slideAnimation =
         Tween<Offset>(
           begin: Offset.zero,
-          end: const Offset(0, -2.385), // move up 25% of its height
+          end: const Offset(0, -2.45), // up
         ).animate(
           CurvedAnimation(parent: _logoController, curve: Curves.easeInOut),
         );
