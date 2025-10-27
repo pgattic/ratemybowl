@@ -6,6 +6,7 @@ import 'package:rate_my_bowl/custom_widgets/account_input_field.dart';
 import 'package:rate_my_bowl/screens/forgot_password_screen.dart';
 import 'package:rate_my_bowl/screens/register_screen.dart';
 import 'package:rate_my_bowl/services/auth_service.dart';
+import 'package:rate_my_bowl/widgets/auth_wrapper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,15 +16,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
   Future<void> _handleLogin() async {
-    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Please enter both username and password"),
+          content: Text("Please enter both email and password"),
           backgroundColor: Colors.red,
         ),
       );
@@ -37,16 +38,16 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final authService = context.read<AuthService>();
       final success = await authService.login(
-        _usernameController.text,
+        _emailController.text,
         _passwordController.text,
       );
 
       if (!success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Invalid username or password"),
-            backgroundColor: Colors.red,
-          ),
+        const SnackBar(
+          content: Text("Invalid email or password"),
+          backgroundColor: Colors.red,
+        ),
         );
       }
     } catch (e) {
@@ -65,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -108,8 +109,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
               AccountInputField(
-                hintText: "username",
-                controller: _usernameController,
+                hintText: "email",
+                controller: _emailController,
               ),
               AccountInputField(
                 hintText: "password",
@@ -183,3 +184,5 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
+
