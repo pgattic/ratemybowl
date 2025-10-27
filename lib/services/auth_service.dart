@@ -79,4 +79,27 @@ class AuthService extends ChangeNotifier {
       return false;
     }
   }
+
+    Future<bool> register(String email, String username, String password) async {
+    try {
+      final response = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+        data: {
+          'username': username,
+        }
+      );
+      
+      if (response.user != null) {
+        _isAuthenticated = true;
+        _email = response.user!.email;
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Signup error: $e');
+      return false;
+    }
+  }
 }
