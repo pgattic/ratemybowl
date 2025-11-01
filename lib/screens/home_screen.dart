@@ -5,6 +5,7 @@ import 'package:rate_my_bowl/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/screens/map_screen.dart';
 import 'package:rate_my_bowl/screens/list_screen.dart';
+import 'package:rate_my_bowl/screens/review_screen.dart';
 import 'package:rate_my_bowl/screens/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _pages = [
     const MapScreen(),
-    const ListScreen(),
+    const ReviewScreen(hintText: "Write your review here..."),
     const SettingsScreen(),
   ];
 
