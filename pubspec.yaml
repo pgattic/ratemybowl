@@ -41,6 +41,8 @@ dependencies:
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
   audioplayers: ^6.5.1
+  supabase_flutter: ^2.0.0
+  flutter_dotenv: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +65,7 @@ flutter:
     - assets/
     - assets/splash_animation.mov
     - assets/sounds/flush.mp3
+    - .env
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
