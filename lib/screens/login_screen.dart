@@ -15,10 +15,30 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  late AnimationController _fadeInController;
+  late Animation<double> _fadeInAnimation;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeInController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+
+    _fadeInAnimation = CurvedAnimation(
+      parent: _fadeInController,
+      curve: Curves.easeInOut,
+    );
+
+    // Start fade-in animation when the screen loads
+    _fadeInController.forward();
+  }
 
   Future<void> _handleLogin() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -44,10 +64,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!success) {
         ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Invalid email or password"),
-          backgroundColor: Colors.red,
-        ),
+          const SnackBar(
+            content: Text("Invalid email or password"),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } catch (e) {
@@ -66,6 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
+    _fadeInController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -79,19 +100,19 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            spacing: 16.0,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Logo row
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
+                    "rate my ",
                     style: GoogleFonts.quicksand(
                       fontSize: 36.0,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
-                    "rate my ",
                   ),
                   SvgPicture.asset(
                     width: 16.0,
@@ -99,83 +120,102 @@ class _LoginScreenState extends State<LoginScreen> {
                     "assets/toilet.svg",
                   ),
                   Text(
+                    "owl",
                     style: GoogleFonts.quicksand(
                       fontSize: 36.0,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
-                    "owl",
                   ),
                 ],
               ),
-              AccountInputField(
-                hintText: "email",
-                controller: _emailController,
-              ),
-              AccountInputField(
-                hintText: "password",
-                obscureText: true,
-                controller: _passwordController,
-              ),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _handleLogin,
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+
+              const SizedBox(height: 16),
+
+              // Fade-in input fields + buttons
+              FadeTransition(
+                opacity: _fadeInAnimation,
+                child: Column(
+                  children: [
+                    AccountInputField(
+                      hintText: "email",
+                      controller: _emailController,
+                    ),
+                    const SizedBox(height: 16),
+                    AccountInputField(
+                      hintText: "password",
+                      obscureText: true,
+                      controller: _passwordController,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Login button
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _handleLogin,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Text("log in"),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Links row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const RegisterScreen(),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Text(
+                              "create an account",
+                              style: GoogleFonts.quicksand(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ),
-                      )
-                    : const Text("log in"),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RegisterScreen(),
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ForgotPasswordScreen(),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Text(
+                              "forgot my password",
+                              style: GoogleFonts.quicksand(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
-                      );
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.all(4.0),
-                      child: Text(
-                        "create an account",
-                        style: GoogleFonts.quicksand(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                      ],
                     ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ForgotPasswordScreen(),
-                        ),
-                      );
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.all(4.0),
-                      child: Text(
-                        "forgot my password",
-                        style: GoogleFonts.quicksand(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -184,5 +224,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-
