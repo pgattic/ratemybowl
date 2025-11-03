@@ -6,7 +6,6 @@ import 'package:rate_my_bowl/custom_widgets/account_input_field.dart';
 import 'package:rate_my_bowl/screens/forgot_password_screen.dart';
 import 'package:rate_my_bowl/screens/register_screen.dart';
 import 'package:rate_my_bowl/services/auth_service.dart';
-import 'package:rate_my_bowl/widgets/auth_wrapper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -44,10 +43,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!success) {
         ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Invalid email or password"),
-          backgroundColor: Colors.red,
-        ),
+          const SnackBar(
+            content: Text("Invalid email or password"),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } catch (e) {
@@ -184,5 +183,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-
