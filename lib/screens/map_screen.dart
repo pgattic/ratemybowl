@@ -15,8 +15,6 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   BathroomLocation? selectedLocation;
-  int _mapVersion = 0;
-
   static const _defaultCenter = LatLng(40.24875188987069, -111.65141681875589);
 
   @override
@@ -38,78 +36,112 @@ class _MapScreenState extends State<MapScreen> {
     final bathroomLocations = MockBathroomData.getBathroomLocations();
     final lc = context.watch<LocationController>();
 
-    final LatLng center = lc.userLatLong ?? _defaultCenter;
+    LatLng center = lc.userLatLong ?? _defaultCenter;
+    double zoom = 18.0;
 
     return Scaffold(
-      body: Stack(
+      body: FlutterMap(
+        options: MapOptions(
+          initialCenter: center,
+          initialZoom: zoom,
+          minZoom: 3.0,
+          maxZoom: 24.0,
+          onMapEvent: (e) {
+            final cam = e.camera;
+            center = cam.center;
+            zoom = cam.zoom;
+          },
+        ),
         children: [
-          FlutterMap(
-            key: ValueKey('map-$_mapVersion-$center'),
-            options: MapOptions(
-              initialCenter: center,
-              initialZoom: 18.0,
-              minZoom: 3.0,
-              maxZoom: 24.0,
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.rate_my_bowl',
-              ),
-              MarkerLayer(
-                markers: bathroomLocations.map((location) {
-                  return Marker(
-                    point: location.coordinates,
-                    width: 40,
-                    height: 50,
-                    child: BathroomPin(
-                      bathroomTypes: location.bathroomTypes,
-                      isSelected: selectedLocation?.id == location.id,
-                      onTap: () {
-                        setState(() {
-                          selectedLocation = location;
-                        });
-                      },
-                    ),
-                  );
-                }).toList(),
-              ),
-
-              if (lc.userLatLong != null && lc.accuracy != null)
-                CircleLayer(
-                  circles: [
-                    CircleMarker(
-                      point: lc.userLatLong!,
-                      radius: lc.accuracy!,
-                      useRadiusInMeter: true,
-                      color: Colors.blue.withValues(alpha: 0.30),
-                      borderColor: Colors.blue.withValues(alpha: 0.40),
-                      borderStrokeWidth: 2,
-                    ),
-                  ],
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'com.example.rate_my_bowl',
+          ),
+          MarkerLayer(
+            markers: bathroomLocations.map((location) {
+              return Marker(
+                point: location.coordinates,
+                width: 40,
+                height: 50,
+                child: BathroomPin(
+                  bathroomTypes: location.bathroomTypes,
+                  isSelected: selectedLocation?.id == location.id,
+                  onTap: () {
+                    setState(() {
+                      selectedLocation = location;
+                    });
+                  },
                 ),
-
-              if (lc.userLatLong != null)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: lc.userLatLong!,
-                      width: 24,
-                      height: 24,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.blue,
-                          border: Border.all(color: Colors.white, width: 3),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-            ],
+              );
+            }).toList(),
+          ),
+          _UserLocationLayer(
+            onFirstFix: (pos) {
+              if (center == _defaultCenter) {
+                setState(() {
+                  center = pos;
+                });
+              }
+            },
           ),
         ],
       ),
+    );
+  }
+}
+
+class _UserLocationLayer extends StatelessWidget {
+  final void Function(LatLng pos)? onFirstFix;
+
+  const _UserLocationLayer({this.onFirstFix});
+
+  @override
+  Widget build(BuildContext context) {
+    final userPos = context.select<LocationController, LatLng?>(
+      (lc) => lc.userLatLong,
+    );
+    final acc = context.select<LocationController, double?>(
+      (lc) => lc.accuracy,
+    );
+
+    if (userPos != null) {
+      onFirstFix?.call(userPos);
+    }
+
+    return Stack(
+      children: [
+        if (userPos != null && acc != null)
+          CircleLayer(
+            circles: [
+              CircleMarker(
+                point: userPos,
+                radius: acc,
+                useRadiusInMeter: true,
+                color: Colors.blue.withValues(alpha: 0.30),
+                borderColor: Colors.blue.withValues(alpha: 0.40),
+                borderStrokeWidth: 2,
+              ),
+            ],
+          ),
+
+        if (userPos != null)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: userPos,
+                width: 24,
+                height: 24,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.blue,
+                    border: Border.all(color: Colors.white, width: 3),
+                  ),
+                ),
+              ),
+            ],
+          ),
+      ],
     );
   }
 }
