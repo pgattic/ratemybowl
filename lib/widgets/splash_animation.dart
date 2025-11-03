@@ -45,28 +45,25 @@ class _SplashAnimationState extends State<SplashAnimation>
   }
 
   Future<void> _initialize() async {
+    // Prevent first frame until we're ready
     WidgetsBinding.instance.deferFirstFrame();
-    try {
-      // Preload logo image
-      await precacheImage(const AssetImage('assets/bowl_logo.png'), context);
 
-      // Prepare sound
+    try {
+      // Prepare audio
       await _audio.setPlayerMode(PlayerMode.mediaPlayer);
       await _audio.setReleaseMode(ReleaseMode.stop);
       await _audio.setVolume(Platform.isAndroid ? 1.0 : 0.7);
+
+      // Load audio asset but don't play yet
       await _audio.setSource(AssetSource('sounds/flush.mp3'));
-      await _audio.stop();
 
-      _controller = AnimationController(vsync: this, duration: widget.duration)
-        ..addListener(_onAnimate);
-
+      // Mark ready
       setState(() => _isReadyToAnimate = true);
 
-      // Wait one full frame before animating to ensure GPU warmup
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Allow first frame and start animation
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         WidgetsBinding.instance.allowFirstFrame();
-        await Future.delayed(const Duration(milliseconds: 50));
-        if (mounted) _controller.forward();
+        _startAnimation();
       });
     } catch (e) {
       debugPrint('Splash init error: $e');
@@ -74,32 +71,42 @@ class _SplashAnimationState extends State<SplashAnimation>
     }
   }
 
+  void _startAnimation() {
+    _controller = AnimationController(vsync: this, duration: widget.duration)
+      ..addListener(_onAnimate);
+
+    if (mounted) _controller.forward();
+  }
+
   void _onAnimate() {
     final progress = _controller.value;
 
-    // Delay the pouring start a bit
+    // Delay pouring start
     if (progress < 0.05) {
       pouringStreamY = -200;
     } else {
-      if (!_soundPlayed) {
+      if (!_soundPlayed && _audio.state == PlayerState.stopped) {
         _soundPlayed = true;
-        _audio.resume();
+        try {
+          _audio.resume();
+        } catch (e) {
+          debugPrint('Audio resume failed: $e');
+        }
       }
 
-      pouringStreamY += 42 * widget.speed; // slightly faster
+      pouringStreamY += 42 * widget.speed;
       if (pouringStreamY >= widget.height) {
         pouringStreamY = widget.height;
         pouringStreamDone = true;
       }
     }
 
-    // Faster water rise
     if (pouringStreamDone) {
-      // Changed from pow(progress, 1.5) to pow(progress, 1.1)
-      // for a smoother, faster fill rate.
       final fill = pow(progress, 1.1);
-      waterLevel = fill * (widget.height + 150);
-      waterLevel = waterLevel.clamp(0.0, widget.height + 150);
+      waterLevel = (fill * (widget.height + 150)).clamp(
+        0.0,
+        widget.height + 150,
+      );
 
       if (waterLevel >= widget.height) {
         _taperSound();
@@ -114,17 +121,36 @@ class _SplashAnimationState extends State<SplashAnimation>
   }
 
   Future<void> _taperSound() async {
+    if (!mounted) return; // Make sure widget still exists
+    if (_audio.state == PlayerState.disposed) return; // Player disposed already
+
     const fadeDuration = Duration(milliseconds: 2000);
     const steps = 10;
+
     for (int i = 0; i < steps; i++) {
-      await _audio.setVolume(
-        (1 - i / steps) * (Platform.isAndroid ? 1.0 : 0.7),
-      );
+      if (!mounted || _audio.state == PlayerState.disposed) break;
+
+      try {
+        await _audio.setVolume(
+          (1 - i / steps) * (Platform.isAndroid ? 1.0 : 0.7),
+        );
+      } catch (e) {
+        debugPrint('Audio setVolume failed: $e');
+        break;
+      }
+
       await Future.delayed(
         Duration(milliseconds: fadeDuration.inMilliseconds ~/ steps),
       );
     }
-    await _audio.stop();
+
+    if (mounted && _audio.state != PlayerState.disposed) {
+      try {
+        await _audio.stop();
+      } catch (e) {
+        debugPrint('Audio stop failed: $e');
+      }
+    }
   }
 
   @override
@@ -136,7 +162,7 @@ class _SplashAnimationState extends State<SplashAnimation>
 
   @override
   Widget build(BuildContext context) {
-    // Initial loading: white background + blue logo
+    // Show loading until audio/logo ready
     if (!_isReadyToAnimate) {
       return Container(
         color: Colors.white,
@@ -158,7 +184,6 @@ class _SplashAnimationState extends State<SplashAnimation>
             pouringStreamDone: pouringStreamDone,
           ),
         ),
-        // ✅ Bring back logo fade-out as water rises
         Center(
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: 800),

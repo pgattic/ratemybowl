@@ -46,3 +46,7 @@ app.*.map.json
 /android/app/release
 .android
 .flutter_env_ready
+
+/ios/
+/ios_backup/
+.metadata
