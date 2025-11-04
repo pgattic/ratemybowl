@@ -15,11 +15,16 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   BathroomLocation? selectedLocation;
+  late final MapController _mapController;
+  bool _didCenterOnFirstFix = false;
+
   static const _defaultCenter = LatLng(40.24875188987069, -111.65141681875589);
+  static const _defaultZoom = 18.0;
 
   @override
   void initState() {
     super.initState();
+    _mapController = MapController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<LocationController>().init();
     });
@@ -31,16 +36,22 @@ class _MapScreenState extends State<MapScreen> {
     super.dispose();
   }
 
+  void _centerOn(LatLng pos, {double zoom = _defaultZoom}) {
+    _mapController.move(pos, zoom);
+    _mapController.rotate(0.0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final bathroomLocations = MockBathroomData.getBathroomLocations();
     final lc = context.watch<LocationController>();
 
     LatLng center = lc.userLatLong ?? _defaultCenter;
-    double zoom = 18.0;
+    double zoom = _defaultZoom;
 
     return Scaffold(
       body: FlutterMap(
+        mapController: _mapController,
         options: MapOptions(
           initialCenter: center,
           initialZoom: zoom,
@@ -77,12 +88,29 @@ class _MapScreenState extends State<MapScreen> {
           ),
           _UserLocationLayer(
             onFirstFix: (pos) {
-              if (center == _defaultCenter) {
+              if (!_didCenterOnFirstFix) {
+                _didCenterOnFirstFix = true;
+                _centerOn(pos, zoom: _defaultZoom);
+              }
+            },
+          ),
+        ],
+      ),
+
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            heroTag: "recenter",
+            onPressed: () {
+              final pos = context.read<LocationController>().userLatLong;
+              if (pos != null) {
                 setState(() {
-                  center = pos;
+                  _centerOn(pos, zoom: _defaultZoom);
                 });
               }
             },
+            child: const Icon(Icons.near_me),
           ),
         ],
       ),
