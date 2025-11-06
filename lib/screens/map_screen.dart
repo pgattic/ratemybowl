@@ -44,7 +44,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     final bathroomLocations = MockBathroomData.getBathroomLocations();
-    final lc = context.watch<LocationController>();
+    final lc = context.read<LocationController>();
 
     LatLng center = lc.userLatLong ?? _defaultCenter;
     double zoom = _defaultZoom;
@@ -110,7 +110,7 @@ class _MapScreenState extends State<MapScreen> {
                 });
               }
             },
-            child: const Icon(Icons.near_me),
+            child: const Icon(Icons.my_location),
           ),
         ],
       ),
@@ -118,10 +118,16 @@ class _MapScreenState extends State<MapScreen> {
   }
 }
 
-class _UserLocationLayer extends StatelessWidget {
+class _UserLocationLayer extends StatefulWidget {
   final void Function(LatLng pos)? onFirstFix;
-
   const _UserLocationLayer({this.onFirstFix});
+
+  @override
+  State<_UserLocationLayer> createState() => _UserLocationLayerState();
+}
+
+class _UserLocationLayerState extends State<_UserLocationLayer> {
+  bool _hasCalledFirstFix = false;
 
   @override
   Widget build(BuildContext context) {
@@ -132,8 +138,11 @@ class _UserLocationLayer extends StatelessWidget {
       (lc) => lc.accuracy,
     );
 
-    if (userPos != null) {
-      onFirstFix?.call(userPos);
+    if (userPos != null && !_hasCalledFirstFix) {
+      _hasCalledFirstFix = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onFirstFix?.call(userPos);
+      });
     }
 
     return Stack(
