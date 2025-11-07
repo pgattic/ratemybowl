@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rate_my_bowl/controllers/location_controller.dart';
 import 'package:rate_my_bowl/screens/home_screen.dart';
 import 'package:rate_my_bowl/screens/map_screen.dart';
 import 'package:rate_my_bowl/services/auth_service.dart';
@@ -37,8 +38,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => AuthService()..checkAuthStatus(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => AuthService()..checkAuthStatus(),
+        ),
+        ChangeNotifierProvider(create: (context) => LocationController()),
+      ],
       child: MaterialApp(
         title: 'Rate My Bowl',
         theme: ThemeData(
