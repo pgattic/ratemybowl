@@ -62,6 +62,24 @@ class _MapScreenState extends State<MapScreen> {
             center = cam.center;
             zoom = cam.zoom;
           },
+          onLongPress: (tapPosition, latLng) {
+            showModalBottomSheet(
+              context: context,
+              barrierColor: Colors.black38,
+              builder: (BuildContext context) {
+                return SizedBox(
+                  height: 250,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[const Text("Add restroom")],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
         ),
         children: [
           TileLayer(
@@ -80,8 +98,23 @@ class _MapScreenState extends State<MapScreen> {
                   isSelected: selectedLocation?.id == location.id,
                   onTap: () {
                     setState(() {
-                      print("bathroom pin tapped");
                       selectedLocation = location;
+                      showModalBottomSheet(
+                        context: context,
+                        barrierColor: Colors.black38,
+                        builder: (BuildContext context) {
+                          return SizedBox(
+                            height: 250,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[const Text("Add review")],
+                              ),
+                            ),
+                          );
+                        },
+                      );
                     });
                   },
                 ),
@@ -113,6 +146,29 @@ class _MapScreenState extends State<MapScreen> {
               }
             },
             child: const Icon(Icons.my_location),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton(
+            heroTag: "add",
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                barrierColor: Colors.black38,
+                builder: (BuildContext context) {
+                  return SizedBox(
+                    height: 250,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[const Text("Add restroom")],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+            child: const Icon(Icons.add),
           ),
         ],
       ),
