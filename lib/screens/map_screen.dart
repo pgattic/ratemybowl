@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/controllers/location_controller.dart';
 import 'package:rate_my_bowl/screens/adding_bathroom_screen.dart';
 import 'package:rate_my_bowl/screens/review_screen.dart';
+import 'package:rate_my_bowl/widgets/rmb_bottom_sheet.dart';
 import '../widgets/bathroom_pin.dart';
 import '../models/bathroom_location.dart';
 
@@ -17,6 +18,7 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   BathroomLocation? selectedLocation;
+  Map<String, Object>? _currentReview;
   late final MapController _mapController;
   bool _didCenterOnFirstFix = false;
 
@@ -68,29 +70,10 @@ class _MapScreenState extends State<MapScreen> {
             showModalBottomSheet(
               context: context,
               barrierColor: Colors.black38,
-              builder: (BuildContext context) {
-                return SizedBox(
-                  height: 250,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        ElevatedButton(
-                          child: const Text('Add restroom'),
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const AddingBathroomScreen(),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+              builder: (_) => RmbBottomSheet(
+                addType: "restroom",
+                screenBuilder: (context) => AddingBathroomScreen(),
+              ),
             );
           },
         ),
@@ -112,36 +95,17 @@ class _MapScreenState extends State<MapScreen> {
                   onTap: () {
                     setState(() {
                       selectedLocation = location;
-                      showModalBottomSheet(
-                        context: context,
-                        barrierColor: Colors.black38,
-                        builder: (BuildContext context) {
-                          return SizedBox(
-                            height: 250,
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  ElevatedButton(
-                                    child: const Text('Add review'),
-                                    onPressed: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ReviewScreen(
-                                              hintText: "test test",
-                                            ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      );
                     });
+
+                    showModalBottomSheet(
+                      context: context,
+                      barrierColor: Colors.black38,
+                      builder: (_) => RmbBottomSheet(
+                        addType: "review",
+                        screenBuilder: (context) =>
+                            ReviewScreen(hintText: "test"),
+                      ),
+                    );
                   },
                 ),
               );
@@ -180,29 +144,10 @@ class _MapScreenState extends State<MapScreen> {
               showModalBottomSheet(
                 context: context,
                 barrierColor: Colors.black38,
-                builder: (BuildContext context) {
-                  return SizedBox(
-                    height: 250,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          ElevatedButton(
-                            child: const Text('Add restroom'),
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const AddingBathroomScreen(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                builder: (_) => RmbBottomSheet(
+                  addType: "restroom",
+                  screenBuilder: (context) => AddingBathroomScreen(),
+                ),
               );
             },
             child: const Icon(Icons.add),
