@@ -103,7 +103,7 @@ class _MapScreenState extends State<MapScreen> {
                       builder: (_) => RmbBottomSheet(
                         addType: "review",
                         screenBuilder: (context) =>
-                            ReviewScreen(hintText: "test"),
+                            ReviewScreen(hintText: "Write your review here..."),
                       ),
                     );
                   },
