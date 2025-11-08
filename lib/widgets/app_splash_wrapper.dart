@@ -16,28 +16,24 @@ class _AppSplashWrapperState extends State<AppSplashWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthService>(
-      builder: (context, authService, child) {
-        if (authService.isAuthenticated && _showSplash) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            setState(() {
-              _showSplash = false;
-            });
-          });
-        }
+      return Consumer<AuthService>(
+        builder: (context, authService, child) {
+          if (authService.isAuthenticated) {
+            return const AuthWrapper();
+          }
 
-        if (_showSplash) {
-          return SplashScreen(
-            onAnimationComplete: () {
-              setState(() {
-                _showSplash = false;
-              });
-            },
-          );
-        }
-        
-        return const AuthWrapper();
-      },
-    );
+          if (_showSplash) {
+            return SplashScreen(
+              onAnimationComplete: () {
+                setState(() {
+                  _showSplash = false;
+                });
+              },
+            );
+          }
+          
+          return const AuthWrapper();
+        },
+      );
   }
 }

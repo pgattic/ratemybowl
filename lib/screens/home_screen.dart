@@ -7,6 +7,8 @@ import 'package:rate_my_bowl/screens/map_screen.dart';
 import 'package:rate_my_bowl/screens/list_screen.dart';
 import 'package:rate_my_bowl/screens/review_screen.dart';
 import 'package:rate_my_bowl/screens/settings_screen.dart';
+import 'package:rate_my_bowl/screens/adding_bathroom_screen.dart';
+import 'package:rate_my_bowl/screens/debug_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,8 +22,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _pages = [
     const MapScreen(),
-    const ReviewScreen(hintText: "Write your review here..."),
+    const ListScreen(),
     const SettingsScreen(),
+    const DebugScreen(),
+    //const ReviewScreen(hintText: "Write your review here..."),
   ];
 
   @override
@@ -68,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.lightBlueAccent,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white70,
@@ -89,6 +94,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Settings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bug_report),
+            label: 'Debug',
           ),
         ],
       ),
