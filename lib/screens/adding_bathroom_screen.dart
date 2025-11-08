@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../widgets/bathroom_pin.dart';
 import '../models/bathroom_location.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AddingBathroomScreen extends StatefulWidget {
-  const AddingBathroomScreen({super.key});
+  final LatLng? initCrossPos;
+  const AddingBathroomScreen({super.key, this.initCrossPos});
 
   @override
   State<AddingBathroomScreen> createState() => _AddingBathroomScreenState();
@@ -14,8 +14,17 @@ class AddingBathroomScreen extends StatefulWidget {
 
 class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
   final TextEditingController _nameController = TextEditingController();
-  double _centerLat = 40.24875188987069;
-  double _centerLng = -111.65141681875589;
+  late double _centerLat;
+  late double _centerLng;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final pos = widget.initCrossPos;
+    _centerLat = pos?.latitude ?? 40.24875188987069;
+    _centerLng = pos?.longitude ?? -111.65141681875589;
+  }
 
   @override
   void dispose() {
@@ -25,8 +34,6 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bathroomLocations = MockBathroomData.getBathroomLocations();
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -42,7 +49,9 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
       ),
       backgroundColor: Colors.lightBlueAccent,
       body: DefaultTextStyle(
-        style: GoogleFonts.quicksand(color: const Color.fromARGB(255, 255, 255, 255)),
+        style: GoogleFonts.quicksand(
+          color: const Color.fromARGB(255, 255, 255, 255),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -58,7 +67,10 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 12.0,
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -67,10 +79,15 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
                       decoration: InputDecoration(
                         labelText: 'Bathroom name',
                         labelStyle: GoogleFonts.quicksand(),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 14.0),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 14.0,
+                        ),
                       ),
                     ),
                   ),
@@ -80,7 +97,10 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
             ),
             Expanded(
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 18.0),
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 20.0,
+                  vertical: 18.0,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(25.0),
@@ -103,7 +123,8 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
                       ),
                       children: [
                         TileLayer(
-                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                           userAgentPackageName: 'com.example.rate_my_bowl',
                         ),
                       ],
@@ -120,7 +141,10 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
               child: Text(
                 'Center: ${_centerLat.toStringAsFixed(6)}, ${_centerLng.toStringAsFixed(6)}',
                 style: GoogleFonts.quicksand(
@@ -134,7 +158,10 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
               child: Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    final result = {'latitude': _centerLat, 'longitude': _centerLng};
+                    final result = {
+                      'latitude': _centerLat,
+                      'longitude': _centerLng,
+                    };
                     Navigator.of(context).pop(result);
                   },
                   child: const Text('Add Bathroom'),

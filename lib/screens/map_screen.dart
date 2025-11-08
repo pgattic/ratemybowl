@@ -18,7 +18,6 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   BathroomLocation? selectedLocation;
-  Map<String, Object>? _currentReview;
   late final MapController _mapController;
   bool _didCenterOnFirstFix = false;
 
@@ -72,7 +71,8 @@ class _MapScreenState extends State<MapScreen> {
               barrierColor: Colors.black38,
               builder: (_) => RmbBottomSheet(
                 addType: "restroom",
-                screenBuilder: (context) => AddingBathroomScreen(),
+                screenBuilder: (context) =>
+                    AddingBathroomScreen(initCrossPos: latLng),
               ),
             );
           },
@@ -146,7 +146,8 @@ class _MapScreenState extends State<MapScreen> {
                 barrierColor: Colors.black38,
                 builder: (_) => RmbBottomSheet(
                   addType: "restroom",
-                  screenBuilder: (context) => AddingBathroomScreen(),
+                  screenBuilder: (context) =>
+                      AddingBathroomScreen(initCrossPos: center),
                 ),
               );
             },
