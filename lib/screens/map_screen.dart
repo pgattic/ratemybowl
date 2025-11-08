@@ -3,6 +3,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/controllers/location_controller.dart';
+import 'package:rate_my_bowl/screens/adding_bathroom_screen.dart';
+import 'package:rate_my_bowl/screens/review_screen.dart';
 import '../widgets/bathroom_pin.dart';
 import '../models/bathroom_location.dart';
 
@@ -73,7 +75,18 @@ class _MapScreenState extends State<MapScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[const Text("Add restroom")],
+                      children: <Widget>[
+                        ElevatedButton(
+                          child: const Text('Add restroom'),
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const AddingBathroomScreen(),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -109,7 +122,20 @@ class _MapScreenState extends State<MapScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[const Text("Add review")],
+                                children: <Widget>[
+                                  ElevatedButton(
+                                    child: const Text('Add review'),
+                                    onPressed: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ReviewScreen(
+                                              hintText: "test test",
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           );
@@ -161,7 +187,18 @@ class _MapScreenState extends State<MapScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[const Text("Add restroom")],
+                        children: <Widget>[
+                          ElevatedButton(
+                            child: const Text('Add restroom'),
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const AddingBathroomScreen(),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );
