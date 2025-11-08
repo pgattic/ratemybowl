@@ -29,7 +29,8 @@ class AuthService extends ChangeNotifier {
         email: email,
         password: password,
       );
-      
+
+      print(response);
       // The auth state listener will automatically update _isAuthenticated and _email
       return response.user != null;
     } catch (e) {
@@ -47,29 +48,26 @@ class AuthService extends ChangeNotifier {
 
   void checkAuthStatus() {
     final session = Supabase.instance.client.auth.currentSession;
-    
+
     if (session != null) {
       _isAuthenticated = true;
       _email = session.user.email;
       notifyListeners();
-    }
-    else {
+    } else {
       _isAuthenticated = false;
       _email = null;
       notifyListeners();
     }
   }
 
-    Future<bool> register(String email, String username, String password) async {
+  Future<bool> register(String email, String username, String password) async {
     try {
       final response = await Supabase.instance.client.auth.signUp(
         email: email,
         password: password,
-        data: {
-          'username': username,
-        }
+        data: {'username': username},
       );
-      
+
       if (response.user != null) {
         _isAuthenticated = true;
         _email = response.user!.email;
