@@ -74,11 +74,13 @@ class _MapScreenState extends State<MapScreen> {
                 point: location.coordinates,
                 width: 40,
                 height: 50,
+                alignment: Alignment.topCenter,
                 child: BathroomPin(
                   bathroomTypes: location.bathroomTypes,
                   isSelected: selectedLocation?.id == location.id,
                   onTap: () {
                     setState(() {
+                      print("bathroom pin tapped");
                       selectedLocation = location;
                     });
                   },
