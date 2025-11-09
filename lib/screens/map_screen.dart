@@ -3,6 +3,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/controllers/location_controller.dart';
+import 'package:rate_my_bowl/screens/adding_bathroom_screen.dart';
+import 'package:rate_my_bowl/screens/review_screen.dart';
+import 'package:rate_my_bowl/widgets/rmb_bottom_sheet.dart';
 import '../widgets/bathroom_pin.dart';
 import '../models/bathroom_location.dart';
 
@@ -62,6 +65,17 @@ class _MapScreenState extends State<MapScreen> {
             center = cam.center;
             zoom = cam.zoom;
           },
+          onLongPress: (tapPosition, latLng) {
+            showModalBottomSheet(
+              context: context,
+              barrierColor: Colors.black38,
+              builder: (_) => RmbBottomSheet(
+                addType: "restroom",
+                screenBuilder: (context) =>
+                    AddingBathroomScreen(initCrossPos: latLng),
+              ),
+            );
+          },
         ),
         children: [
           TileLayer(
@@ -74,6 +88,7 @@ class _MapScreenState extends State<MapScreen> {
                 point: location.coordinates,
                 width: 40,
                 height: 50,
+                alignment: Alignment.topCenter,
                 child: BathroomPin(
                   bathroomTypes: location.bathroomTypes,
                   isSelected: selectedLocation?.id == location.id,
@@ -81,6 +96,16 @@ class _MapScreenState extends State<MapScreen> {
                     setState(() {
                       selectedLocation = location;
                     });
+
+                    showModalBottomSheet(
+                      context: context,
+                      barrierColor: Colors.black38,
+                      builder: (_) => RmbBottomSheet(
+                        addType: "review",
+                        screenBuilder: (context) =>
+                            ReviewScreen(hintText: "Write your review here..."),
+                      ),
+                    );
                   },
                 ),
               );
@@ -111,6 +136,22 @@ class _MapScreenState extends State<MapScreen> {
               }
             },
             child: const Icon(Icons.my_location),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton(
+            heroTag: "add",
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                barrierColor: Colors.black38,
+                builder: (_) => RmbBottomSheet(
+                  addType: "restroom",
+                  screenBuilder: (context) =>
+                      AddingBathroomScreen(initCrossPos: center),
+                ),
+              );
+            },
+            child: const Icon(Icons.add),
           ),
         ],
       ),
