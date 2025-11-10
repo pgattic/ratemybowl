@@ -1,8 +1,7 @@
 CREATE TABLE "restroom"(
     "restroom_id" BIGINT NOT NULL,
-    "location_id" BIGINT NOT NULL,
     "name" TEXT NOT NULL,
-    "gender" VARCHAR(255) NOT NULL CHECK ("gender" IN ('male', 'female', 'unisex')),
+    "gender" SMALLINT NOT NULL,
     "coordinate" geography NOT NULL
 );
 ALTER TABLE
