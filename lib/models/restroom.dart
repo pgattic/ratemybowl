@@ -10,7 +10,6 @@ class Restroom {
   final int reviewCount;
   final List<String> attributes;
 
-
   const Restroom({
     required this.name,
     required this.coordinates,
@@ -23,7 +22,10 @@ class Restroom {
   factory Restroom.fromJson(Map<String, dynamic> json) {
     return Restroom(
       name: json['name'],
-      coordinates: LatLng(json['coordinates']['lat'], json['coordinates']['lng']),
+      coordinates: LatLng(
+        json['coordinates']['lat'],
+        json['coordinates']['lng'],
+      ),
       gender: json['gender'],
       rating: json['rating'],
       reviewCount: json['review_count'],
