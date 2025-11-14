@@ -98,7 +98,7 @@ class BathroomService {
   Future<Restroom?> getRestroomById(String id) async {
     try {
       final response = await Supabase.instance.client
-          .from('restrooms')
+          .from('restroom')
           .select('*')
           .eq('id', id)
           .single();
