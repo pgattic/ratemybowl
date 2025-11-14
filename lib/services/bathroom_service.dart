@@ -63,13 +63,7 @@ class BathroomService {
           final reviewCount = row['review_count'];
           final count = reviewCount != null ? (reviewCount as num).toInt() : 0;
 
-          final genderCode = row['gender']?.toInt() ?? 0;
-          final gender = switch (genderCode) {
-            0 => "Unisex",
-            1 => "Male",
-            2 => "Female",
-            _ => "",
-          };
+          final gender = row['gender']?.toInt() ?? 0;
 
           final attributesData = row['attributes'];
           final List<String> attributes = [];
