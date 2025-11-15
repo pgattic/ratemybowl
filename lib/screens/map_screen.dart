@@ -240,7 +240,22 @@ class _MapScreenState extends State<MapScreen> {
                           restroomId: restroom.id,
                         ),
                       ),
-                    );
+                    ).then((result) {
+                      if (result != null && result is Map && result['success'] == true) {
+                        final currentCenter = _mapController.camera.center;
+                        _fetchRestrooms(currentCenter, zoom: _currentZoom, force: true).then((_) {
+                          if (selectedRestroom != null && mounted) {
+                            final updatedRestroom = _restrooms.firstWhere(
+                              (r) => r.id == selectedRestroom!.id,
+                              orElse: () => selectedRestroom!,
+                            );
+                            setState(() {
+                              selectedRestroom = updatedRestroom;
+                            });
+                          }
+                        });
+                      }
+                    });
                   },
                 ),
               );
