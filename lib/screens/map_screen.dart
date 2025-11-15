@@ -29,18 +29,42 @@ class _MapScreenState extends State<MapScreen> {
 
   static const _defaultCenter = LatLng(40.24875188987069, -111.65141681875589);
   static const _defaultZoom = 18.0;
-  static const _defaultRadius = 1000.0;
   static const _minFetchDistance = 200.0;
   static const _minFetchInterval = Duration(seconds: 2);
+  double _currentZoom = _defaultZoom;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LocationController>().init();
-      _fetchRestrooms(_defaultCenter);
+      final lc = context.read<LocationController>();
+      lc.init();
+      lc.addListener(_onLocationUpdate);
+      final userLocation = lc.userLatLong;
+      if (userLocation != null) {
+        _fetchRestrooms(userLocation, zoom: _defaultZoom, force: true);
+      }
     });
+  }
+
+  void _onLocationUpdate() {
+    final lc = context.read<LocationController>();
+    final userLocation = lc.userLatLong;
+    if (userLocation != null && !_didCenterOnFirstFix) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted && !_didCenterOnFirstFix) {
+          _fetchRestrooms(userLocation, zoom: _defaultZoom, force: true);
+        }
+      });
+    }
+  }
+
+  double _calculateRadiusFromZoom(double zoom) {
+    const baseRadius = 500.0;
+    const maxZoom = 18.0;
+    final radius = baseRadius * math.pow(2, maxZoom - zoom);
+    return radius.clamp(200.0, 100000.0);
   }
 
   double _approximateDistanceInMeters(LatLng point1, LatLng point2) {
@@ -57,29 +81,40 @@ class _MapScreenState extends State<MapScreen> {
     return math.sqrt(latMeters * latMeters + lngMeters * lngMeters);
   }
 
-  Future<void> _fetchRestrooms(LatLng center, {bool force = false}) async {
-    if (_isLoadingRestrooms) return;
+  Future<void> _fetchRestrooms(LatLng center, {bool force = false, double? zoom}) async {
+    if (_isLoadingRestrooms && !force) {
+      return;
+    }
+
+    final currentZoom = zoom ?? _currentZoom;
+    final radius = _calculateRadiusFromZoom(currentZoom);
 
     if (!force && _lastFetchedCenter != null) {
       final distance = _approximateDistanceInMeters(center, _lastFetchedCenter!);
       final timeSinceLastFetch = _lastFetchTime != null
           ? DateTime.now().difference(_lastFetchTime!)
           : Duration.zero;
+      final zoomChanged = (zoom != null && (zoom - _currentZoom).abs() > 0.5);
 
-      if (distance < _minFetchDistance && timeSinceLastFetch < _minFetchInterval) {
+      if (distance < _minFetchDistance && 
+          timeSinceLastFetch < _minFetchInterval && 
+          !zoomChanged) {
         return;
       }
     }
 
     setState(() {
       _isLoadingRestrooms = true;
+      if (zoom != null) {
+        _currentZoom = zoom;
+      }
     });
 
     try {
       final restrooms = await BathroomService.instance.getBathroomLocations(
         lat: center.latitude,
         lng: center.longitude,
-        radius: _defaultRadius,
+        radius: radius,
       );
 
       if (mounted) {
@@ -110,6 +145,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   void dispose() {
+    context.read<LocationController>().removeListener(_onLocationUpdate);
     context.read<LocationController>().disposeController();
     super.dispose();
   }
@@ -125,6 +161,15 @@ class _MapScreenState extends State<MapScreen> {
 
     LatLng center = lc.userLatLong ?? _defaultCenter;
     double zoom = _defaultZoom;
+    
+    final userLocation = lc.userLatLong;
+    if (userLocation != null && _lastFetchedCenter == null && !_isLoadingRestrooms) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _lastFetchedCenter == null) {
+          _fetchRestrooms(userLocation, zoom: _defaultZoom, force: true);
+        }
+      });
+    }
 
     return Scaffold(
       body: FlutterMap(
@@ -136,10 +181,15 @@ class _MapScreenState extends State<MapScreen> {
           maxZoom: 24.0,
           onMapEvent: (e) {
             final cam = e.camera;
-            center = cam.center;
-            zoom = cam.zoom;
+            final newCenter = cam.center;
+            final newZoom = cam.zoom;
             
-            _fetchRestrooms(center);
+            center = newCenter;
+            zoom = newZoom;
+            
+            if (_didCenterOnFirstFix || _lastFetchedCenter != null) {
+              _fetchRestrooms(newCenter, zoom: newZoom);
+            }
           },
           onLongPress: (tapPosition, latLng) {
             showModalBottomSheet(
@@ -192,7 +242,12 @@ class _MapScreenState extends State<MapScreen> {
               if (!_didCenterOnFirstFix) {
                 _didCenterOnFirstFix = true;
                 _centerOn(pos, zoom: _defaultZoom);
-                _fetchRestrooms(pos, force: true);
+                _lastFetchedCenter = null;
+                Future.delayed(const Duration(milliseconds: 300), () {
+                  if (mounted) {
+                    _fetchRestrooms(pos, zoom: _defaultZoom, force: true);
+                  }
+                });
               }
             },
           ),
@@ -209,8 +264,9 @@ class _MapScreenState extends State<MapScreen> {
               if (pos != null) {
                 setState(() {
                   _centerOn(pos, zoom: _defaultZoom);
+                  _currentZoom = _defaultZoom;
                 });
-                _fetchRestrooms(pos, force: true);
+                _fetchRestrooms(pos, zoom: _defaultZoom, force: true);
               }
             },
             child: const Icon(Icons.my_location),
