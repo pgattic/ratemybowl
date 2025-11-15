@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/restroom.dart';
+import '../services/bathroom_service.dart';
 
 class AddingBathroomScreen extends StatefulWidget {
   final LatLng? initCrossPos;
@@ -15,6 +17,8 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
   final TextEditingController _nameController = TextEditingController();
   late double _centerLat;
   late double _centerLng;
+  Gender _selectedGender = Gender.Unisex;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -29,6 +33,58 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
   void dispose() {
     _nameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveRestroom() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a bathroom name'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final restroom = Restroom(
+        name: name,
+        coordinates: LatLng(_centerLat, _centerLng),
+        gender: _selectedGender,
+        rating: 0.0,
+        reviewCount: 0,
+        attributes: [],
+      );
+
+      await BathroomService.instance.addRestroom(restroom);
+
+      if (mounted) {
+        final result = {
+          'name': name,
+          'latitude': _centerLat,
+          'longitude': _centerLng,
+          'gender': _selectedGender.name,
+        };
+        Navigator.of(context).pop(result);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error adding bathroom: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -94,6 +150,59 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0),
+              child: Text(
+                'Gender',
+                style: GoogleFonts.quicksand(
+                  fontSize: 26.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 12.0,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: DropdownButtonFormField<Gender>(
+                  value: _selectedGender,
+                  decoration: InputDecoration(
+                    labelText: 'Select gender',
+                    labelStyle: GoogleFonts.quicksand(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12.0,
+                      vertical: 14.0,
+                    ),
+                  ),
+                  items: Gender.values.map((gender) {
+                    return DropdownMenuItem<Gender>(
+                      value: gender,
+                      child: Text(
+                        gender.name,
+                        style: GoogleFonts.quicksand(),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (Gender? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _selectedGender = newValue;
+                      });
+                    }
+                  },
+                ),
+              ),
+            ),
             Expanded(
               child: Container(
                 margin: const EdgeInsets.symmetric(
@@ -156,14 +265,14 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
               padding: const EdgeInsets.only(bottom: 16.0),
               child: Center(
                 child: ElevatedButton(
-                  onPressed: () {
-                    final result = {
-                      'latitude': _centerLat,
-                      'longitude': _centerLng,
-                    };
-                    Navigator.of(context).pop(result);
-                  },
-                  child: const Text('Add Bathroom'),
+                  onPressed: _isSaving ? null : _saveRestroom,
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Add Bathroom'),
                 ),
               ),
             ),
