@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -25,12 +26,14 @@ class _MapScreenState extends State<MapScreen> {
   List<Restroom> _restrooms = [];
   bool _isLoadingRestrooms = false;
   LatLng? _lastFetchedCenter;
-  DateTime? _lastFetchTime;
+  Timer? _debounceTimer;
+  LatLng? _pendingCenter;
+  double? _pendingZoom;
 
   static const _defaultCenter = LatLng(40.24875188987069, -111.65141681875589);
   static const _defaultZoom = 18.0;
   static const _minFetchDistance = 200.0;
-  static const _minFetchInterval = Duration(seconds: 2);
+  static const _debounceDelay = Duration(seconds: 2);
   double _currentZoom = _defaultZoom;
 
   @override
@@ -81,9 +84,34 @@ class _MapScreenState extends State<MapScreen> {
     return math.sqrt(latMeters * latMeters + lngMeters * lngMeters);
   }
 
+  void _debouncedFetchRestrooms(LatLng center, {double? zoom}) {
+    _debounceTimer?.cancel();
+    
+    _pendingCenter = center;
+    _pendingZoom = zoom;
+    
+    _debounceTimer = Timer(_debounceDelay, () {
+      if (_pendingCenter != null && mounted) {
+        final centerToFetch = _pendingCenter!;
+        final zoomToFetch = _pendingZoom;
+        _pendingCenter = null;
+        _pendingZoom = null;
+        _fetchRestrooms(centerToFetch, zoom: zoomToFetch);
+      }
+    });
+  }
+
   Future<void> _fetchRestrooms(LatLng center, {bool force = false, double? zoom}) async {
-    if (_isLoadingRestrooms && !force) {
-      return;
+    if (force) {
+      _debounceTimer?.cancel();
+      _debounceTimer = null;
+      _pendingCenter = null;
+      _pendingZoom = null;
+    } else {
+      if (_isLoadingRestrooms) {
+        _debouncedFetchRestrooms(center, zoom: zoom);
+        return;
+      }
     }
 
     final currentZoom = zoom ?? _currentZoom;
@@ -91,14 +119,9 @@ class _MapScreenState extends State<MapScreen> {
 
     if (!force && _lastFetchedCenter != null) {
       final distance = _approximateDistanceInMeters(center, _lastFetchedCenter!);
-      final timeSinceLastFetch = _lastFetchTime != null
-          ? DateTime.now().difference(_lastFetchTime!)
-          : Duration.zero;
       final zoomChanged = (zoom != null && (zoom - _currentZoom).abs() > 0.5);
 
-      if (distance < _minFetchDistance && 
-          timeSinceLastFetch < _minFetchInterval && 
-          !zoomChanged) {
+      if (distance < _minFetchDistance && !zoomChanged) {
         return;
       }
     }
@@ -122,7 +145,6 @@ class _MapScreenState extends State<MapScreen> {
           _restrooms = restrooms;
           _isLoadingRestrooms = false;
           _lastFetchedCenter = center;
-          _lastFetchTime = DateTime.now();
         });
       }
     } catch (e) {
@@ -145,6 +167,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     context.read<LocationController>().removeListener(_onLocationUpdate);
     context.read<LocationController>().disposeController();
     super.dispose();
@@ -188,7 +211,7 @@ class _MapScreenState extends State<MapScreen> {
             zoom = newZoom;
             
             if (_didCenterOnFirstFix || _lastFetchedCenter != null) {
-              _fetchRestrooms(newCenter, zoom: newZoom);
+              _debouncedFetchRestrooms(newCenter, zoom: newZoom);
             }
           },
           onLongPress: (tapPosition, latLng) async {
