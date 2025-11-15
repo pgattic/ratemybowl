@@ -234,6 +234,7 @@ class _MapScreenState extends State<MapScreen> {
                       barrierColor: Colors.black38,
                       builder: (_) => RmbBottomSheet(
                         addType: "review",
+                        restroom: restroom,
                         screenBuilder: (context) =>
                             ReviewScreen(hintText: "Write your review here..."),
                       ),
