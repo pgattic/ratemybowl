@@ -30,6 +30,7 @@ class ReviewService {
       await Supabase.instance.client.from('review').insert(review.toJson());
     } catch (e) {
       print('Error adding review: $e');
+      rethrow;
     }
   }
 }
