@@ -68,7 +68,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   double _approximateDistanceInMeters(LatLng point1, LatLng point2) {
-    // Simple approximation: 1 degree latitude ≈ 111km, 1 degree longitude ≈ 111km * cos(latitude)
+    // this is just a rough calculation. If things aren't showing up when we'd expect them to, this should be the first place to check for bugs
     const metersPerDegreeLat = 111000.0;
     final metersPerDegreeLng = 111000.0 * (point1.latitude + point2.latitude) / 2.0 * 3.14159 / 180.0;
     
@@ -309,7 +309,6 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               );
               
-              // If a restroom was created, add it to the map
               if (result != null && mounted) {
                 setState(() {
                   _restrooms.add(result);

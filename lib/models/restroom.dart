@@ -39,9 +39,6 @@ class Restroom {
   }
 
   Map<String, dynamic> toJson() {
-    // For database insert, only include fields that exist in the restroom table
-    // coordinate is a PostGIS geography type
-    // Supabase may accept the POINT string format, or we may need to use an RPC function
     return {
       'name': name,
       'coordinate': 'SRID=4326;POINT(${coordinates.longitude} ${coordinates.latitude})',
