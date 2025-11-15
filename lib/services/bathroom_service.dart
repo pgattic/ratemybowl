@@ -112,16 +112,28 @@ class BathroomService {
     }
   }
 
-  Future<void> addRestroom(Restroom restroom) async {
+  Future<Restroom> addRestroom(Restroom restroom) async {
     try {
       final data = restroom.toJson();
       // We don't want to set the restroom_id - let the database generate it automatically for us
       data.remove('restroom_id');
       
-      await Supabase.instance.client
+      final response = await Supabase.instance.client
           .from('restroom')
           .insert(data)
-          .select();
+          .select()
+          .single();
+
+      final restroomId = response['restroom_id'];
+      return Restroom(
+        id: restroomId is int ? restroomId : (restroomId is num ? restroomId.toInt() : null),
+        name: response['name'] ?? restroom.name,
+        coordinates: restroom.coordinates,
+        gender: restroom.gender,
+        rating: 0.0,
+        reviewCount: 0,
+        attributes: [],
+      );
     } catch (e) {
       print('Error adding restroom: $e');
       rethrow; // Re-throw so the UI can handle the error

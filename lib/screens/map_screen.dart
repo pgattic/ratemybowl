@@ -191,8 +191,8 @@ class _MapScreenState extends State<MapScreen> {
               _fetchRestrooms(newCenter, zoom: newZoom);
             }
           },
-          onLongPress: (tapPosition, latLng) {
-            showModalBottomSheet(
+          onLongPress: (tapPosition, latLng) async {
+            final result = await showModalBottomSheet<Restroom>(
               context: context,
               barrierColor: Colors.black38,
               builder: (_) => RmbBottomSheet(
@@ -201,6 +201,12 @@ class _MapScreenState extends State<MapScreen> {
                     AddingBathroomScreen(initCrossPos: latLng),
               ),
             );
+            
+            if (result != null && mounted) {
+              setState(() {
+                _restrooms.add(result);
+              });
+            }
           },
         ),
         children: [
@@ -274,8 +280,8 @@ class _MapScreenState extends State<MapScreen> {
           const SizedBox(height: 12),
           FloatingActionButton(
             heroTag: "add",
-            onPressed: () {
-              showModalBottomSheet(
+            onPressed: () async {
+              final result = await showModalBottomSheet<Restroom>(
                 context: context,
                 barrierColor: Colors.black38,
                 builder: (_) => RmbBottomSheet(
@@ -284,6 +290,13 @@ class _MapScreenState extends State<MapScreen> {
                       AddingBathroomScreen(initCrossPos: center),
                 ),
               );
+              
+              // If a restroom was created, add it to the map
+              if (result != null && mounted) {
+                setState(() {
+                  _restrooms.add(result);
+                });
+              }
             },
             child: const Icon(Icons.add),
           ),

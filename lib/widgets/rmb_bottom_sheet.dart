@@ -36,15 +36,16 @@ class _ReviewBottomSheetState extends State<RmbBottomSheet> {
             ElevatedButton(
               child: Text('Add ${widget.addType.toLowerCase()}'),
               onPressed: () async {
-                final result = await Navigator.push<Map<String, Object>>(
+                final result = await Navigator.push(
                   context,
                   MaterialPageRoute(builder: widget.screenBuilder),
                 );
 
                 if (result != null) {
                   setState(() {
-                    display = result;
+                    display = result is Map ? Map<String, Object>.from(result) : {'result': result.toString()};
                   });
+                  Navigator.of(context).pop(result);
                 }
               },
             ),

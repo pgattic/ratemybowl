@@ -61,16 +61,10 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
         attributes: [],
       );
 
-      await BathroomService.instance.addRestroom(restroom);
+      final createdRestroom = await BathroomService.instance.addRestroom(restroom);
 
       if (mounted) {
-        final result = {
-          'name': name,
-          'latitude': _centerLat,
-          'longitude': _centerLng,
-          'gender': _selectedGender.name,
-        };
-        Navigator.of(context).pop(result);
+        Navigator.of(context).pop(createdRestroom);
       }
     } catch (e) {
       if (mounted) {
