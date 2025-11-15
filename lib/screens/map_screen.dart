@@ -196,7 +196,7 @@ class _MapScreenState extends State<MapScreen> {
               context: context,
               barrierColor: Colors.black38,
               builder: (_) => RmbBottomSheet(
-                addType: "restroom",
+                addType: BottomSheetType.restroom,
                 screenBuilder: (context) =>
                     AddingBathroomScreen(initCrossPos: latLng),
               ),
@@ -233,7 +233,7 @@ class _MapScreenState extends State<MapScreen> {
                       context: context,
                       barrierColor: Colors.black38,
                       builder: (_) => RmbBottomSheet(
-                        addType: "review",
+                        addType: BottomSheetType.review,
                         restroom: restroom,
                         screenBuilder: (context) => ReviewScreen(
                           hintText: "Write your review here...",
@@ -303,7 +303,7 @@ class _MapScreenState extends State<MapScreen> {
                 context: context,
                 barrierColor: Colors.black38,
                 builder: (_) => RmbBottomSheet(
-                  addType: "restroom",
+                  addType: BottomSheetType.restroom,
                   screenBuilder: (context) =>
                       AddingBathroomScreen(initCrossPos: center),
                 ),
