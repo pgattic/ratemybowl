@@ -63,7 +63,7 @@ class BathroomService {
           final reviewCount = row['review_count'];
           final count = reviewCount != null ? (reviewCount as num).toInt() : 0;
 
-          final gender = row['gender']?.toInt() ?? 0;
+          final gender = Restroom.getGender(row['gender'] ?? 0);
 
           final attributesData = row['attributes'];
           final List<String> attributes = [];
@@ -75,8 +75,11 @@ class BathroomService {
             }
           }
 
+          final restroomId = row['restroom_id'];
+
           restrooms.add(
             Restroom(
+              id: restroomId,
               name: row['name'] ?? 'Unnamed Restroom',
               coordinates: LatLng(latitude, longitude),
               gender: gender,
@@ -109,11 +112,31 @@ class BathroomService {
     }
   }
 
-  Future<void> addRestroom(Restroom restroom) async {
+  Future<Restroom> addRestroom(Restroom restroom) async {
     try {
-      await Supabase.instance.client.from('restroom').insert(restroom.toJson());
+      final data = restroom.toJson();
+      // We don't want to set the restroom_id - let the database generate it automatically for us, otherwise we'll get an error
+      data.remove('restroom_id');
+      
+      final response = await Supabase.instance.client
+          .from('restroom')
+          .insert(data)
+          .select()
+          .single();
+
+      final restroomId = response['restroom_id'];
+      return Restroom(
+        id: restroomId is int ? restroomId : (restroomId is num ? restroomId.toInt() : null),
+        name: response['name'] ?? restroom.name,
+        coordinates: restroom.coordinates,
+        gender: restroom.gender,
+        rating: 0.0,
+        reviewCount: 0,
+        attributes: [],
+      );
     } catch (e) {
       print('Error adding restroom: $e');
+      rethrow;
     }
   }
 }

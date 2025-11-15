@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -6,8 +7,9 @@ import 'package:rate_my_bowl/controllers/location_controller.dart';
 import 'package:rate_my_bowl/screens/adding_bathroom_screen.dart';
 import 'package:rate_my_bowl/screens/review_screen.dart';
 import 'package:rate_my_bowl/widgets/rmb_bottom_sheet.dart';
+import 'package:rate_my_bowl/services/bathroom_service.dart';
+import 'package:rate_my_bowl/models/restroom.dart';
 import '../widgets/bathroom_pin.dart';
-import '../models/bathroom_location.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -17,24 +19,133 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  BathroomLocation? selectedLocation;
+  Restroom? selectedRestroom;
   late final MapController _mapController;
   bool _didCenterOnFirstFix = false;
+  List<Restroom> _restrooms = [];
+  bool _isLoadingRestrooms = false;
+  LatLng? _lastFetchedCenter;
+  DateTime? _lastFetchTime;
 
   static const _defaultCenter = LatLng(40.24875188987069, -111.65141681875589);
   static const _defaultZoom = 18.0;
+  static const _minFetchDistance = 200.0;
+  static const _minFetchInterval = Duration(seconds: 2);
+  double _currentZoom = _defaultZoom;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LocationController>().init();
+      final lc = context.read<LocationController>();
+      lc.init();
+      lc.addListener(_onLocationUpdate);
+      final userLocation = lc.userLatLong;
+      if (userLocation != null) {
+        _fetchRestrooms(userLocation, zoom: _defaultZoom, force: true);
+      }
     });
+  }
+
+  void _onLocationUpdate() {
+    final lc = context.read<LocationController>();
+    final userLocation = lc.userLatLong;
+    if (userLocation != null && !_didCenterOnFirstFix) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted && !_didCenterOnFirstFix) {
+          _fetchRestrooms(userLocation, zoom: _defaultZoom, force: true);
+        }
+      });
+    }
+  }
+
+  double _calculateRadiusFromZoom(double zoom) {
+    const baseRadius = 500.0;
+    const maxZoom = 18.0;
+    final radius = baseRadius * math.pow(2, maxZoom - zoom);
+    return radius.clamp(200.0, 100000.0);
+  }
+
+  double _approximateDistanceInMeters(LatLng point1, LatLng point2) {
+    // this is just a rough calculation. If things aren't showing up when we'd expect them to, this should be the first place to check for bugs
+    const metersPerDegreeLat = 111000.0;
+    final metersPerDegreeLng = 111000.0 * (point1.latitude + point2.latitude) / 2.0 * 3.14159 / 180.0;
+    
+    final latDiff = (point1.latitude - point2.latitude).abs();
+    final lngDiff = (point1.longitude - point2.longitude).abs();
+    
+    final latMeters = latDiff * metersPerDegreeLat;
+    final lngMeters = lngDiff * metersPerDegreeLng;
+    
+    return math.sqrt(latMeters * latMeters + lngMeters * lngMeters);
+  }
+
+  Future<void> _fetchRestrooms(LatLng center, {bool force = false, double? zoom}) async {
+    if (_isLoadingRestrooms && !force) {
+      return;
+    }
+
+    final currentZoom = zoom ?? _currentZoom;
+    final radius = _calculateRadiusFromZoom(currentZoom);
+
+    if (!force && _lastFetchedCenter != null) {
+      final distance = _approximateDistanceInMeters(center, _lastFetchedCenter!);
+      final timeSinceLastFetch = _lastFetchTime != null
+          ? DateTime.now().difference(_lastFetchTime!)
+          : Duration.zero;
+      final zoomChanged = (zoom != null && (zoom - _currentZoom).abs() > 0.5);
+
+      if (distance < _minFetchDistance && 
+          timeSinceLastFetch < _minFetchInterval && 
+          !zoomChanged) {
+        return;
+      }
+    }
+
+    setState(() {
+      _isLoadingRestrooms = true;
+      if (zoom != null) {
+        _currentZoom = zoom;
+      }
+    });
+
+    try {
+      final restrooms = await BathroomService.instance.getBathroomLocations(
+        lat: center.latitude,
+        lng: center.longitude,
+        radius: radius,
+      );
+
+      if (mounted) {
+        setState(() {
+          _restrooms = restrooms;
+          _isLoadingRestrooms = false;
+          _lastFetchedCenter = center;
+          _lastFetchTime = DateTime.now();
+        });
+      }
+    } catch (e) {
+      print('Error fetching restrooms: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingRestrooms = false;
+        });
+      }
+    }
+  }
+
+  List<BathroomType> _genderToBathroomTypes(Gender gender) {
+    return switch (gender) {
+      Gender.Male => [BathroomType.men],
+      Gender.Female => [BathroomType.women],
+      Gender.Unisex => [BathroomType.other],
+    };
   }
 
   @override
   void dispose() {
+    context.read<LocationController>().removeListener(_onLocationUpdate);
     context.read<LocationController>().disposeController();
     super.dispose();
   }
@@ -46,11 +157,19 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bathroomLocations = MockBathroomData.getBathroomLocations();
     final lc = context.read<LocationController>();
 
     LatLng center = lc.userLatLong ?? _defaultCenter;
     double zoom = _defaultZoom;
+    
+    final userLocation = lc.userLatLong;
+    if (userLocation != null && _lastFetchedCenter == null && !_isLoadingRestrooms) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _lastFetchedCenter == null) {
+          _fetchRestrooms(userLocation, zoom: _defaultZoom, force: true);
+        }
+      });
+    }
 
     return Scaffold(
       body: FlutterMap(
@@ -62,19 +181,32 @@ class _MapScreenState extends State<MapScreen> {
           maxZoom: 24.0,
           onMapEvent: (e) {
             final cam = e.camera;
-            center = cam.center;
-            zoom = cam.zoom;
+            final newCenter = cam.center;
+            final newZoom = cam.zoom;
+            
+            center = newCenter;
+            zoom = newZoom;
+            
+            if (_didCenterOnFirstFix || _lastFetchedCenter != null) {
+              _fetchRestrooms(newCenter, zoom: newZoom);
+            }
           },
-          onLongPress: (tapPosition, latLng) {
-            showModalBottomSheet(
+          onLongPress: (tapPosition, latLng) async {
+            final result = await showModalBottomSheet<Restroom>(
               context: context,
               barrierColor: Colors.black38,
               builder: (_) => RmbBottomSheet(
-                addType: "restroom",
+                addType: BottomSheetType.restroom,
                 screenBuilder: (context) =>
                     AddingBathroomScreen(initCrossPos: latLng),
               ),
             );
+            
+            if (result != null && mounted) {
+              setState(() {
+                _restrooms.add(result);
+              });
+            }
           },
         ),
         children: [
@@ -83,29 +215,47 @@ class _MapScreenState extends State<MapScreen> {
             userAgentPackageName: 'com.example.rate_my_bowl',
           ),
           MarkerLayer(
-            markers: bathroomLocations.map((location) {
+            markers: _restrooms.map((restroom) {
               return Marker(
-                point: location.coordinates,
+                point: restroom.coordinates,
                 width: 40,
                 height: 50,
                 alignment: Alignment.topCenter,
                 child: BathroomPin(
-                  bathroomTypes: location.bathroomTypes,
-                  isSelected: selectedLocation?.id == location.id,
+                  bathroomTypes: _genderToBathroomTypes(restroom.gender),
+                  isSelected: selectedRestroom?.id == restroom.id,
                   onTap: () {
                     setState(() {
-                      selectedLocation = location;
+                      selectedRestroom = restroom;
                     });
 
                     showModalBottomSheet(
                       context: context,
                       barrierColor: Colors.black38,
                       builder: (_) => RmbBottomSheet(
-                        addType: "review",
-                        screenBuilder: (context) =>
-                            ReviewScreen(hintText: "Write your review here..."),
+                        addType: BottomSheetType.review,
+                        restroom: restroom,
+                        screenBuilder: (context) => ReviewScreen(
+                          hintText: "Write your review here...",
+                          restroomId: restroom.id,
+                        ),
                       ),
-                    );
+                    ).then((result) {
+                      if (result != null && result is Map && result['success'] == true) {
+                        final currentCenter = _mapController.camera.center;
+                        _fetchRestrooms(currentCenter, zoom: _currentZoom, force: true).then((_) {
+                          if (selectedRestroom != null && mounted) {
+                            final updatedRestroom = _restrooms.firstWhere(
+                              (r) => r.id == selectedRestroom!.id,
+                              orElse: () => selectedRestroom!,
+                            );
+                            setState(() {
+                              selectedRestroom = updatedRestroom;
+                            });
+                          }
+                        });
+                      }
+                    });
                   },
                 ),
               );
@@ -116,6 +266,12 @@ class _MapScreenState extends State<MapScreen> {
               if (!_didCenterOnFirstFix) {
                 _didCenterOnFirstFix = true;
                 _centerOn(pos, zoom: _defaultZoom);
+                _lastFetchedCenter = null;
+                Future.delayed(const Duration(milliseconds: 300), () {
+                  if (mounted) {
+                    _fetchRestrooms(pos, zoom: _defaultZoom, force: true);
+                  }
+                });
               }
             },
           ),
@@ -132,7 +288,9 @@ class _MapScreenState extends State<MapScreen> {
               if (pos != null) {
                 setState(() {
                   _centerOn(pos, zoom: _defaultZoom);
+                  _currentZoom = _defaultZoom;
                 });
+                _fetchRestrooms(pos, zoom: _defaultZoom, force: true);
               }
             },
             child: const Icon(Icons.my_location),
@@ -140,16 +298,22 @@ class _MapScreenState extends State<MapScreen> {
           const SizedBox(height: 12),
           FloatingActionButton(
             heroTag: "add",
-            onPressed: () {
-              showModalBottomSheet(
+            onPressed: () async {
+              final result = await showModalBottomSheet<Restroom>(
                 context: context,
                 barrierColor: Colors.black38,
                 builder: (_) => RmbBottomSheet(
-                  addType: "restroom",
+                  addType: BottomSheetType.restroom,
                   screenBuilder: (context) =>
                       AddingBathroomScreen(initCrossPos: center),
                 ),
               );
+              
+              if (result != null && mounted) {
+                setState(() {
+                  _restrooms.add(result);
+                });
+              }
             },
             child: const Icon(Icons.add),
           ),

@@ -5,12 +5,13 @@ class ReviewService {
   static final ReviewService instance = ReviewService._();
   ReviewService._();
 
-  Future<List<Review>> getReviewsByRestroomId(String restroomId) async {
+  Future<List<Review>> getReviewsByRestroomId(int restroomId) async {
     try {
       final response = await Supabase.instance.client
           .from('review')
           .select('*')
-          .eq('restroom_id', restroomId);
+          .eq('restroom_id', restroomId)
+          .order('review_dt', ascending: false);
 
       final List<Review> reviews = [];
 
@@ -30,6 +31,7 @@ class ReviewService {
       await Supabase.instance.client.from('review').insert(review.toJson());
     } catch (e) {
       print('Error adding review: $e');
+      rethrow;
     }
   }
 }

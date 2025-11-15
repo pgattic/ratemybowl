@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 enum Gender { Male, Female, Unisex }
 
 class Restroom {
+  final int? id;
   final String name;
   final LatLng coordinates;
   final Gender gender;
@@ -13,6 +14,7 @@ class Restroom {
   final List<String> attributes;
 
   const Restroom({
+    this.id,
     required this.name,
     required this.coordinates,
     required this.gender,
@@ -23,6 +25,7 @@ class Restroom {
 
   factory Restroom.fromJson(Map<String, dynamic> json) {
     return Restroom(
+      id: json['restroom_id'],
       name: json['name'],
       coordinates: LatLng(
         json['coordinates']['lat'],
@@ -38,11 +41,8 @@ class Restroom {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
-      'coordinates': coordinates.toString(),
+      'coordinate': 'SRID=4326;POINT(${coordinates.longitude} ${coordinates.latitude})',
       'gender': genderInt,
-      'rating': rating,
-      'reviewCount': reviewCount,
-      'attributes': attributes,
     };
   }
 

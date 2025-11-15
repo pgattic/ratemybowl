@@ -31,7 +31,7 @@ class Review {
       'restroom_id': restroomId,
       'user_id': userId,
       'stars': stars,
-      'review_dt': reviewDt,
+      'review_dt': reviewDt.toIso8601String(),
       'notes': notes,
     };
   }
