@@ -174,8 +174,6 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
                 child: DropdownButtonFormField<Gender>(
                   value: _selectedGender,
                   decoration: InputDecoration(
-                    labelText: 'Select gender',
-                    labelStyle: GoogleFonts.quicksand(),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
