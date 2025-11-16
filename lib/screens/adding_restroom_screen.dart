@@ -1,0 +1,213 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../models/restroom.dart';
+import '../services/restroom_service.dart';
+
+class AddingRestroomScreen extends StatefulWidget {
+  final LatLng? initCrossPos;
+  const AddingRestroomScreen({super.key, this.initCrossPos});
+
+  @override
+  State<AddingRestroomScreen> createState() => _AddingRestroomScreenState();
+}
+
+class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
+  final TextEditingController _nameController = TextEditingController();
+  late double _centerLat;
+  late double _centerLng;
+  Gender _selectedGender = Gender.unisex;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final pos = widget.initCrossPos;
+    _centerLat = pos?.latitude ?? 40.24875188987069;
+    _centerLng = pos?.longitude ?? -111.65141681875589;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveRestroom() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a restroom name'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final restroom = Restroom(
+        name: name,
+        coordinates: LatLng(_centerLat, _centerLng),
+        gender: _selectedGender,
+        rating: 0.0,
+        reviewCount: 0,
+        attributes: [],
+      );
+
+      final createdRestroom = await RestroomService.instance.addRestroom(
+        restroom,
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop(createdRestroom);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error adding restroom: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Adding New Restroom')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 12.0,
+          children: [
+            Text('Restroom Name'),
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                hintText: 'Restroom Name',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+            ),
+            Text('Gender'),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: DropdownButtonFormField<Gender>(
+                initialValue: _selectedGender,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 14.0,
+                  ),
+                ),
+                items: Gender.values.map((gender) {
+                  return DropdownMenuItem<Gender>(
+                    value: gender,
+                    child: Text(gender.name, style: GoogleFonts.quicksand()),
+                  );
+                }).toList(),
+                onChanged: (Gender? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedGender = newValue;
+                    });
+                  }
+                },
+              ),
+            ),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+                clipBehavior: Clip.hardEdge,
+                child: Stack(
+                  children: [
+                    FlutterMap(
+                      options: MapOptions(
+                        initialCenter: LatLng(_centerLat, _centerLng),
+                        initialZoom: 18.0,
+                        minZoom: 3.0,
+                        maxZoom: 24.0,
+                        onPositionChanged: (position, hasGesture) {
+                          setState(() {
+                            _centerLat = position.center.latitude;
+                            _centerLng = position.center.longitude;
+                          });
+                        },
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.example.rate_my_bowl',
+                        ),
+                      ],
+                    ),
+                    const Center(
+                      child: Icon(
+                        Icons.add,
+                        size: 36,
+                        color: Color.fromARGB(255, 0, 0, 0),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: Text(
+                'Position: ${_centerLat.toStringAsFixed(6)}, ${_centerLng.toStringAsFixed(6)}',
+                style: GoogleFonts.quicksand(
+                  color: Colors.white,
+                  fontSize: 14.0,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: Center(
+                child: ElevatedButton(
+                  onPressed: _isSaving ? null : _saveRestroom,
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Add Restroom'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

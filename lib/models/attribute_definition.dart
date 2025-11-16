@@ -1,6 +1,6 @@
-enum DataType { Bool, Int, Decimal, Text, Option }
+enum DataType { bool, int, decimal, text, option }
 
-enum AppliesTo { Restroom, Review }
+enum AppliesTo { restroom, review }
 
 class AttributeDefinition {
   final int attrId;
@@ -51,37 +51,37 @@ class AttributeDefinition {
 
   static DataType getDataType(String dtStr) {
     return switch (dtStr.toLowerCase()) {
-      'bool' => DataType.Bool,
-      'int' => DataType.Int,
-      'decimal' => DataType.Decimal,
-      'text' => DataType.Text,
-      'option' => DataType.Option,
+      'bool' => DataType.bool,
+      'int' => DataType.int,
+      'decimal' => DataType.decimal,
+      'text' => DataType.text,
+      'option' => DataType.option,
       _ => throw ArgumentError("Unexpected DataType enum value: $dtStr"),
     };
   }
 
   static AppliesTo getAppliesTo(String applToStr) {
     return switch (applToStr.toLowerCase()) {
-      'restroom' => AppliesTo.Restroom,
-      'review' => AppliesTo.Review,
+      'restroom' => AppliesTo.restroom,
+      'review' => AppliesTo.review,
       _ => throw ArgumentError("Unexpected AppliesTo enum value: $applToStr"),
     };
   }
 
   String get dataTypeString {
     return switch (dataType) {
-      DataType.Bool => 'bool',
-      DataType.Int => 'int',
-      DataType.Decimal => 'decimal',
-      DataType.Text => 'text',
-      DataType.Option => 'option',
+      DataType.bool => 'bool',
+      DataType.int => 'int',
+      DataType.decimal => 'decimal',
+      DataType.text => 'text',
+      DataType.option => 'option',
     };
   }
 
   String get appliesToString {
     return switch (appliesTo) {
-      AppliesTo.Restroom => 'restroom',
-      AppliesTo.Review => 'review',
+      AppliesTo.restroom => 'restroom',
+      AppliesTo.review => 'review',
     };
   }
 }

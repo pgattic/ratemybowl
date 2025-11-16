@@ -70,9 +70,9 @@ class _ReviewBottomSheetState extends State<RmbBottomSheet> {
 
   String _getGenderDisplayName(Gender gender) {
     return switch (gender) {
-      Gender.Male => 'Men\'s',
-      Gender.Female => 'Women\'s',
-      Gender.Unisex => 'Unisex',
+      Gender.male => 'Men\'s',
+      Gender.female => 'Women\'s',
+      Gender.unisex => 'Unisex',
     };
   }
 

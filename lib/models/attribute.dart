@@ -29,19 +29,19 @@ class Attribute {
     int? valueOptionId;
 
     switch (definition.dataType) {
-      case DataType.Bool:
+      case DataType.bool:
         valueBool = value as bool;
         break;
-      case DataType.Int:
+      case DataType.int:
         valueInt = value as int;
         break;
-      case DataType.Decimal:
+      case DataType.decimal:
         valueDecimal = (value as num).toDouble();
         break;
-      case DataType.Text:
+      case DataType.text:
         valueText = value as String;
         break;
-      case DataType.Option:
+      case DataType.option:
         final opt = value as AttributeOption;
         valueOptionId = opt.optionId;
         break;

@@ -2,7 +2,7 @@
 
 import 'package:latlong2/latlong.dart';
 
-enum Gender { Male, Female, Unisex }
+enum Gender { male, female, unisex }
 
 class Restroom {
   final int? id;
@@ -48,18 +48,18 @@ class Restroom {
 
   static Gender getGender(int genderInt) {
     return switch (genderInt) {
-      0 => Gender.Unisex,
-      1 => Gender.Male,
-      2 => Gender.Female,
+      0 => Gender.unisex,
+      1 => Gender.male,
+      2 => Gender.female,
       _ => throw ArgumentError("Unexpected Gender enum value: $genderInt"),
     };
   }
 
   int get genderInt {
     return switch (gender) {
-      Gender.Unisex => 0,
-      Gender.Male => 1,
-      Gender.Female => 2,
+      Gender.unisex => 0,
+      Gender.male => 1,
+      Gender.female => 2,
     };
   }
 }
