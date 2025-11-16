@@ -64,7 +64,6 @@ dev_dependencies:
 flutter:
   assets:
     - assets/
-    - assets/splash_animation.mov
     - assets/sounds/flush.mp3
     - .env
 
