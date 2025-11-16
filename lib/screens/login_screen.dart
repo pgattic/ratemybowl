@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:rate_my_bowl/custom_widgets/account_input_field.dart';
+import 'package:rate_my_bowl/widgets/account_input_field.dart';
 import 'package:rate_my_bowl/screens/forgot_password_screen.dart';
 import 'package:rate_my_bowl/screens/register_screen.dart';
 import 'package:rate_my_bowl/services/auth_service.dart';
@@ -144,8 +143,8 @@ class _LoginScreenState extends State<LoginScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        InkWell(
-                          onTap: () {
+                        TextButton(
+                          onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -164,8 +163,8 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                           ),
                         ),
-                        InkWell(
-                          onTap: () {
+                        TextButton(
+                          onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(

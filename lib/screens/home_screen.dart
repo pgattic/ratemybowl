@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Colors.lightBlueAccent,
       appBar: AppBar(
@@ -71,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.lightBlueAccent,
-        selectedItemColor: Colors.white,
+        selectedItemColor: colors.onPrimary,
         unselectedItemColor: Colors.white70,
         currentIndex: _selectedIndex,
         onTap: (index) {

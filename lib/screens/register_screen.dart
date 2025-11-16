@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:rate_my_bowl/custom_widgets/account_input_field.dart';
+import 'package:rate_my_bowl/widgets/account_input_field.dart';
 import 'package:rate_my_bowl/services/auth_service.dart';
 import 'package:rate_my_bowl/widgets/bowl_logo.dart';
 

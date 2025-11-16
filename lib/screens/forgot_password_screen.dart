@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:rate_my_bowl/custom_widgets/account_input_field.dart';
+import 'package:rate_my_bowl/widgets/account_input_field.dart';
 import 'package:rate_my_bowl/widgets/bowl_logo.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {

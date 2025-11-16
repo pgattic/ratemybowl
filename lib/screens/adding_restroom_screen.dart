@@ -61,7 +61,9 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
         attributes: [],
       );
 
-      final createdRestroom = await RestroomService.instance.addRestroom(restroom);
+      final createdRestroom = await RestroomService.instance.addRestroom(
+        restroom,
+      );
 
       if (mounted) {
         Navigator.of(context).pop(createdRestroom);
@@ -84,126 +86,61 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Adding New Restroom',
-          style: GoogleFonts.quicksand(
-            fontSize: 26.0,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: Colors.lightBlueAccent,
-        elevation: 0,
-      ),
-      backgroundColor: Colors.lightBlueAccent,
-      body: DefaultTextStyle(
-        style: GoogleFonts.quicksand(
-          color: const Color.fromARGB(255, 255, 255, 255),
-        ),
+      appBar: AppBar(title: Text('Adding New Restroom')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 12.0,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
-              child: Text(
-                'Restroom Name',
-                style: GoogleFonts.quicksand(
-                  fontSize: 26.0,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 12.0,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: 'Restroom name',
-                        labelStyle: GoogleFonts.quicksand(),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12.0,
-                          vertical: 14.0,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0),
-              child: Text(
-                'Gender',
-                style: GoogleFonts.quicksand(
-                  fontSize: 26.0,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 12.0,
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
+            Text('Restroom Name'),
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                hintText: 'Restroom Name',
+                border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
                 ),
-                child: DropdownButtonFormField<Gender>(
-                  initialValue: _selectedGender,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12.0,
-                      vertical: 14.0,
-                    ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+            ),
+            Text('Gender'),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: DropdownButtonFormField<Gender>(
+                initialValue: _selectedGender,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
                   ),
-                  items: Gender.values.map((gender) {
-                    return DropdownMenuItem<Gender>(
-                      value: gender,
-                      child: Text(
-                        gender.name,
-                        style: GoogleFonts.quicksand(),
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (Gender? newValue) {
-                    if (newValue != null) {
-                      setState(() {
-                        _selectedGender = newValue;
-                      });
-                    }
-                  },
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 14.0,
+                  ),
                 ),
+                items: Gender.values.map((gender) {
+                  return DropdownMenuItem<Gender>(
+                    value: gender,
+                    child: Text(gender.name, style: GoogleFonts.quicksand()),
+                  );
+                }).toList(),
+                onChanged: (Gender? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedGender = newValue;
+                    });
+                  }
+                },
               ),
             ),
             Expanded(
               child: Container(
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 20.0,
-                  vertical: 18.0,
-                ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(25.0),
+                  borderRadius: BorderRadius.circular(16.0),
                 ),
                 clipBehavior: Clip.hardEdge,
                 child: Stack(
@@ -246,7 +183,7 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
                 vertical: 8.0,
               ),
               child: Text(
-                'Center: ${_centerLat.toStringAsFixed(6)}, ${_centerLng.toStringAsFixed(6)}',
+                'Position: ${_centerLat.toStringAsFixed(6)}, ${_centerLng.toStringAsFixed(6)}',
                 style: GoogleFonts.quicksand(
                   color: Colors.white,
                   fontSize: 14.0,
@@ -268,7 +205,7 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
                 ),
               ),
             ),
-          ], // end of Column children
+          ],
         ),
       ),
     );

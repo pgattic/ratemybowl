@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+
 import 'package:rate_my_bowl/controllers/location_controller.dart';
 import 'package:rate_my_bowl/screens/adding_restroom_screen.dart';
 import 'package:rate_my_bowl/screens/review_screen.dart';
@@ -20,117 +21,132 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  Restroom? selectedRestroom;
-  late final MapController _mapController;
-  bool _didCenterOnFirstFix = false;
-  List<Restroom> _restrooms = [];
+  // Map + restroom state
+  final MapController _mapController = MapController();
+  final List<Restroom> _restrooms = [];
+
+  Restroom? _selectedRestroom;
   bool _isLoadingRestrooms = false;
   LatLng? _lastFetchedCenter;
+
+  // Debouncing & zoom
   Timer? _debounceTimer;
   LatLng? _pendingCenter;
-  double? _pendingZoom;
+  double _currentZoom = _defaultZoom;
 
+  // User/location
+  late final LocationController _locationController;
+  bool _didCenterOnFirstFix = false;
+
+  // Constants
   static const _defaultCenter = LatLng(40.24875188987069, -111.65141681875589);
   static const _defaultZoom = 18.0;
-  static const _minFetchDistance = 200.0;
-  static const _debounceDelay = Duration(seconds: 2);
-  double _currentZoom = _defaultZoom;
+  static const _minFetchDistance = 200.0; // meters
+  static const _debounceDelay = Duration(milliseconds: 800);
 
   @override
   void initState() {
     super.initState();
-    _mapController = MapController();
+
+    // Grab controller once, and reuse it. This avoids using context in dispose.
+    _locationController = context.read<LocationController>();
+
+    // Kick off location init after first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final lc = context.read<LocationController>();
-      lc.init();
-      lc.addListener(_onLocationUpdate);
-      final userLocation = lc.userLatLong;
-      if (userLocation != null) {
-        _fetchRestrooms(userLocation, zoom: _defaultZoom, force: true);
-      }
+      _locationController.init();
+
+      final userLocation = _locationController.userLatLong;
+      final initialCenter = userLocation ?? _defaultCenter;
+
+      // Center map and perform an initial fetch around this point.
+      _mapController.move(initialCenter, _defaultZoom);
+      _currentZoom = _defaultZoom;
+      _fetchRestrooms(initialCenter, zoom: _defaultZoom, force: true);
     });
   }
 
-  void _onLocationUpdate() {
-    final lc = context.read<LocationController>();
-    final userLocation = lc.userLatLong;
-    if (userLocation != null && !_didCenterOnFirstFix) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (mounted && !_didCenterOnFirstFix) {
-          _fetchRestrooms(userLocation, zoom: _defaultZoom, force: true);
-        }
-      });
-    }
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    // DO NOT dispose the LocationController here; Provider owns it.
+    super.dispose();
   }
 
+  // ==========================
+  // Fetching logic
+  // ==========================
+
   double _calculateRadiusFromZoom(double zoom) {
-    const baseRadius = 500.0;
+    // Rough heuristic: larger radius at low zoom.
+    const baseRadius = 500.0; // meters
     const maxZoom = 18.0;
     final radius = baseRadius * math.pow(2, maxZoom - zoom);
     return radius.clamp(200.0, 100000.0);
   }
 
-  double _approximateDistanceInMeters(LatLng point1, LatLng point2) {
-    // this is just a rough calculation. If things aren't showing up when we'd expect them to, this should be the first place to check for bugs
+  double _approximateDistanceInMeters(LatLng a, LatLng b) {
+    // Rough approximation; good enough for "should we refetch?" decisions.
     const metersPerDegreeLat = 111000.0;
-    final metersPerDegreeLng = 111000.0 * (point1.latitude + point2.latitude) / 2.0 * 3.14159 / 180.0;
-    
-    final latDiff = (point1.latitude - point2.latitude).abs();
-    final lngDiff = (point1.longitude - point2.longitude).abs();
-    
-    final latMeters = latDiff * metersPerDegreeLat;
-    final lngMeters = lngDiff * metersPerDegreeLng;
-    
+    final avgLatRad = (a.latitude + b.latitude) / 2.0 * math.pi / 180.0;
+    final metersPerDegreeLng = 111000.0 * math.cos(avgLatRad);
+
+    final latMeters = (a.latitude - b.latitude).abs() * metersPerDegreeLat;
+    final lngMeters = (a.longitude - b.longitude).abs() * metersPerDegreeLng;
+
     return math.sqrt(latMeters * latMeters + lngMeters * lngMeters);
   }
 
   void _debouncedFetchRestrooms(LatLng center, {double? zoom}) {
     _debounceTimer?.cancel();
-    
+
     _pendingCenter = center;
-    _pendingZoom = zoom;
-    
+    if (zoom != null) {
+      _currentZoom = zoom;
+    }
+
     _debounceTimer = Timer(_debounceDelay, () {
-      if (_pendingCenter != null && mounted) {
-        final centerToFetch = _pendingCenter!;
-        final zoomToFetch = _pendingZoom;
-        _pendingCenter = null;
-        _pendingZoom = null;
-        _fetchRestrooms(centerToFetch, zoom: zoomToFetch);
-      }
+      if (!mounted || _pendingCenter == null) return;
+      final centerToFetch = _pendingCenter!;
+      _pendingCenter = null;
+
+      _fetchRestrooms(centerToFetch, zoom: _currentZoom);
     });
   }
 
-  Future<void> _fetchRestrooms(LatLng center, {bool force = false, double? zoom}) async {
-    if (force) {
-      _debounceTimer?.cancel();
-      _debounceTimer = null;
-      _pendingCenter = null;
-      _pendingZoom = null;
-    } else {
+  Future<void> _fetchRestrooms(
+    LatLng center, {
+    bool force = false,
+    double? zoom,
+  }) async {
+    if (!mounted) return;
+
+    if (!force) {
+      // Avoid overlapping fetches; just schedule a debounced one instead.
       if (_isLoadingRestrooms) {
         _debouncedFetchRestrooms(center, zoom: zoom);
         return;
       }
+    } else {
+      // Clear any pending debounce when forcing.
+      _debounceTimer?.cancel();
+      _debounceTimer = null;
+      _pendingCenter = null;
     }
 
-    final currentZoom = zoom ?? _currentZoom;
-    final radius = _calculateRadiusFromZoom(currentZoom);
+    final usedZoom = zoom ?? _currentZoom;
+    final radius = _calculateRadiusFromZoom(usedZoom);
 
+    // Skip fetches if user hasn't moved much and zoom hasn't changed.
     if (!force && _lastFetchedCenter != null) {
       final distance = _approximateDistanceInMeters(center, _lastFetchedCenter!);
-      final zoomChanged = (zoom != null && (zoom - _currentZoom).abs() > 0.5);
-
-      if (distance < _minFetchDistance && !zoomChanged) {
+      if (distance < _minFetchDistance) {
         return;
       }
     }
 
     setState(() {
       _isLoadingRestrooms = true;
-      if (zoom != null) {
-        _currentZoom = zoom;
-      }
+      _currentZoom = usedZoom;
     });
 
     try {
@@ -140,69 +156,54 @@ class _MapScreenState extends State<MapScreen> {
         radius: radius,
       );
 
-      if (mounted) {
-        setState(() {
-          _restrooms = restrooms;
-          _isLoadingRestrooms = false;
-          _lastFetchedCenter = center;
-        });
-      }
-    } catch (e) {
-      print('Error fetching restrooms: $e');
-      if (mounted) {
-        setState(() {
-          _isLoadingRestrooms = false;
-        });
-      }
-    }
-  }
+      if (!mounted) return;
 
-  @override
-  void dispose() {
-    _debounceTimer?.cancel();
-    context.read<LocationController>().removeListener(_onLocationUpdate);
-    context.read<LocationController>().disposeController();
-    super.dispose();
+      setState(() {
+        _restrooms
+          ..clear()
+          ..addAll(restrooms);
+        _isLoadingRestrooms = false;
+        _lastFetchedCenter = center;
+      });
+    } catch (e, st) {
+      // TODO: swap this for proper error tracking / snackbar.
+      debugPrint('Error fetching restrooms: $e\n$st');
+      if (!mounted) return;
+
+      setState(() {
+        _isLoadingRestrooms = false;
+      });
+    }
   }
 
   void _centerOn(LatLng pos, {double zoom = _defaultZoom}) {
     _mapController.move(pos, zoom);
-    _mapController.rotate(0.0);
   }
+
+  // ==========================
+  // Build
+  // ==========================
 
   @override
   Widget build(BuildContext context) {
-    final lc = context.read<LocationController>();
-
-    LatLng center = lc.userLatLong ?? _defaultCenter;
-    double zoom = _defaultZoom;
-    
-    final userLocation = lc.userLatLong;
-    if (userLocation != null && _lastFetchedCenter == null && !_isLoadingRestrooms) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _lastFetchedCenter == null) {
-          _fetchRestrooms(userLocation, zoom: _defaultZoom, force: true);
-        }
-      });
-    }
+    final userLocation = _locationController.userLatLong;
+    final initialCenter = userLocation ?? _defaultCenter;
 
     return Scaffold(
       body: FlutterMap(
         mapController: _mapController,
         options: MapOptions(
-          initialCenter: center,
-          initialZoom: zoom,
+          initialCenter: initialCenter,
+          initialZoom: _currentZoom,
           minZoom: 3.0,
           maxZoom: 24.0,
-          onMapEvent: (e) {
-            final cam = e.camera;
+          onMapEvent: (event) {
+            final cam = event.camera;
             final newCenter = cam.center;
             final newZoom = cam.zoom;
-            
-            center = newCenter;
-            zoom = newZoom;
-            
-            if (_didCenterOnFirstFix || _lastFetchedCenter != null) {
+
+            // Once we've done any initial fetch, we can base everything on camera.
+            if (_lastFetchedCenter != null || _didCenterOnFirstFix) {
               _debouncedFetchRestrooms(newCenter, zoom: newZoom);
             }
           },
@@ -216,7 +217,7 @@ class _MapScreenState extends State<MapScreen> {
                     AddingRestroomScreen(initCrossPos: latLng),
               ),
             );
-            
+
             if (result != null && mounted) {
               setState(() {
                 _restrooms.add(result);
@@ -231,6 +232,7 @@ class _MapScreenState extends State<MapScreen> {
           ),
           MarkerLayer(
             markers: _restrooms.map((restroom) {
+              final isSelected = _selectedRestroom?.id == restroom.id;
               return Marker(
                 point: restroom.coordinates,
                 width: 40,
@@ -238,10 +240,10 @@ class _MapScreenState extends State<MapScreen> {
                 alignment: Alignment.topCenter,
                 child: RestroomPin(
                   restroomGender: restroom.gender,
-                  isSelected: selectedRestroom?.id == restroom.id,
+                  isSelected: isSelected,
                   onTap: () {
                     setState(() {
-                      selectedRestroom = restroom;
+                      _selectedRestroom = restroom;
                     });
 
                     showModalBottomSheet(
@@ -255,19 +257,28 @@ class _MapScreenState extends State<MapScreen> {
                           restroomId: restroom.id,
                         ),
                       ),
-                    ).then((result) {
-                      if (result != null && result is Map && result['success'] == true) {
-                        final currentCenter = _mapController.camera.center;
-                        _fetchRestrooms(currentCenter, zoom: _currentZoom, force: true).then((_) {
-                          if (selectedRestroom != null && mounted) {
-                            final updatedRestroom = _restrooms.firstWhere(
-                              (r) => r.id == selectedRestroom!.id,
-                              orElse: () => selectedRestroom!,
-                            );
-                            setState(() {
-                              selectedRestroom = updatedRestroom;
-                            });
-                          }
+                    ).then((result) async {
+                      if (!mounted) return;
+
+                      final success = result is Map && result['success'] == true;
+                      if (!success) return;
+
+                      final currentCenter = _mapController.camera.center;
+                      await _fetchRestrooms(
+                        currentCenter,
+                        zoom: _currentZoom,
+                        force: true,
+                      );
+
+                      if (!mounted) return;
+
+                      if (_selectedRestroom != null) {
+                        final updated = _restrooms.firstWhere(
+                          (r) => r.id == _selectedRestroom!.id,
+                          orElse: () => _selectedRestroom!,
+                        );
+                        setState(() {
+                          _selectedRestroom = updated;
                         });
                       }
                     });
@@ -276,18 +287,15 @@ class _MapScreenState extends State<MapScreen> {
               );
             }).toList(),
           ),
+
+          // User location marker + accuracy circle
           _UserLocationLayer(
             onFirstFix: (pos) {
-              if (!_didCenterOnFirstFix) {
-                _didCenterOnFirstFix = true;
-                _centerOn(pos, zoom: _defaultZoom);
-                _lastFetchedCenter = null;
-                Future.delayed(const Duration(milliseconds: 300), () {
-                  if (mounted) {
-                    _fetchRestrooms(pos, zoom: _defaultZoom, force: true);
-                  }
-                });
-              }
+              if (_didCenterOnFirstFix || !mounted) return;
+
+              _didCenterOnFirstFix = true;
+              _centerOn(pos, zoom: _defaultZoom);
+              _fetchRestrooms(pos, zoom: _defaultZoom, force: true);
             },
           ),
         ],
@@ -296,24 +304,25 @@ class _MapScreenState extends State<MapScreen> {
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Recenter on user
           FloatingActionButton(
             heroTag: "recenter",
             onPressed: () {
-              final pos = context.read<LocationController>().userLatLong;
+              final pos = _locationController.userLatLong;
               if (pos != null) {
-                setState(() {
-                  _centerOn(pos, zoom: _defaultZoom);
-                  _currentZoom = _defaultZoom;
-                });
+                _centerOn(pos, zoom: _defaultZoom);
                 _fetchRestrooms(pos, zoom: _defaultZoom, force: true);
               }
             },
             child: const Icon(Icons.my_location),
           ),
           const SizedBox(height: 12),
+
+          // Add restroom at current map center
           FloatingActionButton(
             heroTag: "add",
             onPressed: () async {
+              final center = _mapController.camera.center;
               final result = await showModalBottomSheet<Restroom>(
                 context: context,
                 barrierColor: Colors.black38,
@@ -323,7 +332,7 @@ class _MapScreenState extends State<MapScreen> {
                       AddingRestroomScreen(initCrossPos: center),
                 ),
               );
-              
+
               if (result != null && mounted) {
                 setState(() {
                   _restrooms.add(result);
@@ -337,6 +346,10 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 }
+
+// ==========================
+// User location layer
+// ==========================
 
 class _UserLocationLayer extends StatefulWidget {
   final void Function(LatLng pos)? onFirstFix;
@@ -358,9 +371,11 @@ class _UserLocationLayerState extends State<_UserLocationLayer> {
       (lc) => lc.accuracy,
     );
 
+    // Fire callback once when we get first non-null fix.
     if (userPos != null && !_hasCalledFirstFix) {
       _hasCalledFirstFix = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         widget.onFirstFix?.call(userPos);
       });
     }
@@ -380,7 +395,6 @@ class _UserLocationLayerState extends State<_UserLocationLayer> {
               ),
             ],
           ),
-
         if (userPos != null)
           MarkerLayer(
             markers: [

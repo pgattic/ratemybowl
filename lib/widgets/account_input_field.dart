@@ -15,6 +15,8 @@ class AccountInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return TextField(
       controller: controller,
       obscureText: obscureText,
@@ -28,7 +30,7 @@ class AccountInputField extends StatelessWidget {
           color: Colors.grey,
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: scheme.onPrimary,
       ),
     );
   }
