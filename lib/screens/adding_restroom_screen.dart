@@ -3,21 +3,21 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/restroom.dart';
-import '../services/bathroom_service.dart';
+import '../services/restroom_service.dart';
 
-class AddingBathroomScreen extends StatefulWidget {
+class AddingRestroomScreen extends StatefulWidget {
   final LatLng? initCrossPos;
-  const AddingBathroomScreen({super.key, this.initCrossPos});
+  const AddingRestroomScreen({super.key, this.initCrossPos});
 
   @override
-  State<AddingBathroomScreen> createState() => _AddingBathroomScreenState();
+  State<AddingRestroomScreen> createState() => _AddingRestroomScreenState();
 }
 
-class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
+class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
   final TextEditingController _nameController = TextEditingController();
   late double _centerLat;
   late double _centerLng;
-  Gender _selectedGender = Gender.Unisex;
+  Gender _selectedGender = Gender.unisex;
   bool _isSaving = false;
 
   @override
@@ -40,7 +40,7 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please enter a bathroom name'),
+          content: Text('Please enter a restroom name'),
           backgroundColor: Colors.red,
         ),
       );
@@ -61,7 +61,7 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
         attributes: [],
       );
 
-      final createdRestroom = await BathroomService.instance.addRestroom(restroom);
+      final createdRestroom = await RestroomService.instance.addRestroom(restroom);
 
       if (mounted) {
         Navigator.of(context).pop(createdRestroom);
@@ -73,7 +73,7 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error adding bathroom: $e'),
+            content: Text('Error adding restroom: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -86,7 +86,7 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Adding New Bathroom',
+          'Adding New Restroom',
           style: GoogleFonts.quicksand(
             fontSize: 26.0,
             fontWeight: FontWeight.bold,
@@ -107,7 +107,7 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
               child: Text(
-                'Bathroom Name',
+                'Restroom Name',
                 style: GoogleFonts.quicksand(
                   fontSize: 26.0,
                   fontWeight: FontWeight.bold,
@@ -126,7 +126,7 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
                     child: TextField(
                       controller: _nameController,
                       decoration: InputDecoration(
-                        labelText: 'Bathroom name',
+                        labelText: 'Restroom name',
                         labelStyle: GoogleFonts.quicksand(),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.0),
@@ -166,7 +166,7 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: DropdownButtonFormField<Gender>(
-                  value: _selectedGender,
+                  initialValue: _selectedGender,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
@@ -264,7 +264,7 @@ class _AddingBathroomScreenState extends State<AddingBathroomScreen> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Add Bathroom'),
+                      : const Text('Add Restroom'),
                 ),
               ),
             ),

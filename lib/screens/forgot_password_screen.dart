@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rate_my_bowl/custom_widgets/account_input_field.dart';
+import 'package:rate_my_bowl/widgets/bowl_logo.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -53,32 +54,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             spacing: 16.0,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    style: GoogleFonts.quicksand(
-                      fontSize: 36.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    "rate my ",
-                  ),
-                  SvgPicture.asset(
-                    width: 16.0,
-                    height: 32.0,
-                    "assets/toilet.svg",
-                  ),
-                  Text(
-                    style: GoogleFonts.quicksand(
-                      fontSize: 36.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    "owl",
-                  ),
-                ],
-              ),
+              RateMyBowlLogo(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

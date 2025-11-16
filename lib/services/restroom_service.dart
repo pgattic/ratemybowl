@@ -2,11 +2,11 @@ import 'package:latlong2/latlong.dart';
 import 'package:rate_my_bowl/models/restroom.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class BathroomService {
-  static final BathroomService instance = BathroomService._();
-  BathroomService._();
+class RestroomService {
+  static final RestroomService instance = RestroomService._();
+  RestroomService._();
 
-  Future<List<Restroom>> getBathroomLocations({
+  Future<List<Restroom>> getRestroomLocations({
     required double lat,
     required double lng,
     required double radius,
@@ -93,7 +93,7 @@ class BathroomService {
 
       return restrooms;
     } catch (e) {
-      print('Error fetching bathroom locations: $e');
+      print('Error fetching restroom locations: $e');
       return [];
     }
   }

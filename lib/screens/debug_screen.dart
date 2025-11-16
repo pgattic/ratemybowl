@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rate_my_bowl/screens/adding_bathroom_screen.dart';
+import 'package:rate_my_bowl/screens/adding_restroom_screen.dart';
 import 'package:rate_my_bowl/screens/review_screen.dart';
 
 class DebugScreen extends StatefulWidget {
@@ -30,13 +30,13 @@ class _DebugScreenState extends State<DebugScreen> {
                   onPressed: () async {
                     final result = await Navigator.push<Map<String, double>>(
                       context,
-                      MaterialPageRoute(builder: (_) => const AddingBathroomScreen()),
+                      MaterialPageRoute(builder: (_) => const AddingRestroomScreen()),
                     );
                     if (result != null && result['latitude'] != null && result['longitude'] != null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Bathroom added at Lat: ${result['latitude']}, Lng: ${result['longitude']}')),
+                        SnackBar(content: Text('Restroom added at Lat: ${result['latitude']}, Lng: ${result['longitude']}')),
                       );
-                      print('Added bathroom at Lat: ${result['latitude']}, Lng: ${result['longitude']}');
+                      print('Added restroom at Lat: ${result['latitude']}, Lng: ${result['longitude']}');
                     }
                   },
                   child: const Text('Screen'),

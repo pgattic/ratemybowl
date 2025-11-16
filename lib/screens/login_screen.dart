@@ -6,6 +6,7 @@ import 'package:rate_my_bowl/custom_widgets/account_input_field.dart';
 import 'package:rate_my_bowl/screens/forgot_password_screen.dart';
 import 'package:rate_my_bowl/screens/register_screen.dart';
 import 'package:rate_my_bowl/services/auth_service.dart';
+import 'package:rate_my_bowl/widgets/bowl_logo.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -101,34 +102,7 @@ class _LoginScreenState extends State<LoginScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "rate my ",
-                    style: GoogleFonts.quicksand(
-                      fontSize: 36.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SvgPicture.asset(
-                    width: 16.0,
-                    height: 32.0,
-                    "assets/toilet.svg",
-                  ),
-                  Text(
-                    "owl",
-                    style: GoogleFonts.quicksand(
-                      fontSize: 36.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-
+              RateMyBowlLogo(),
               const SizedBox(height: 16),
 
               // Fade-in input fields + buttons

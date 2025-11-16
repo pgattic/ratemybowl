@@ -5,12 +5,12 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/controllers/location_controller.dart';
-import 'package:rate_my_bowl/screens/adding_bathroom_screen.dart';
+import 'package:rate_my_bowl/screens/adding_restroom_screen.dart';
 import 'package:rate_my_bowl/screens/review_screen.dart';
 import 'package:rate_my_bowl/widgets/rmb_bottom_sheet.dart';
-import 'package:rate_my_bowl/services/bathroom_service.dart';
+import 'package:rate_my_bowl/services/restroom_service.dart';
 import 'package:rate_my_bowl/models/restroom.dart';
-import '../widgets/bathroom_pin.dart';
+import '../widgets/restroom_pin.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -134,7 +134,7 @@ class _MapScreenState extends State<MapScreen> {
     });
 
     try {
-      final restrooms = await BathroomService.instance.getBathroomLocations(
+      final restrooms = await RestroomService.instance.getRestroomLocations(
         lat: center.latitude,
         lng: center.longitude,
         radius: radius,
@@ -155,14 +155,6 @@ class _MapScreenState extends State<MapScreen> {
         });
       }
     }
-  }
-
-  List<BathroomType> _genderToBathroomTypes(Gender gender) {
-    return switch (gender) {
-      Gender.Male => [BathroomType.men],
-      Gender.Female => [BathroomType.women],
-      Gender.Unisex => [BathroomType.other],
-    };
   }
 
   @override
@@ -221,7 +213,7 @@ class _MapScreenState extends State<MapScreen> {
               builder: (_) => RmbBottomSheet(
                 addType: BottomSheetType.restroom,
                 screenBuilder: (context) =>
-                    AddingBathroomScreen(initCrossPos: latLng),
+                    AddingRestroomScreen(initCrossPos: latLng),
               ),
             );
             
@@ -244,8 +236,8 @@ class _MapScreenState extends State<MapScreen> {
                 width: 40,
                 height: 50,
                 alignment: Alignment.topCenter,
-                child: BathroomPin(
-                  bathroomTypes: _genderToBathroomTypes(restroom.gender),
+                child: RestroomPin(
+                  restroomGender: restroom.gender,
                   isSelected: selectedRestroom?.id == restroom.id,
                   onTap: () {
                     setState(() {
@@ -328,7 +320,7 @@ class _MapScreenState extends State<MapScreen> {
                 builder: (_) => RmbBottomSheet(
                   addType: BottomSheetType.restroom,
                   screenBuilder: (context) =>
-                      AddingBathroomScreen(initCrossPos: center),
+                      AddingRestroomScreen(initCrossPos: center),
                 ),
               );
               
