@@ -253,7 +253,7 @@ class _MapScreenState extends State<MapScreen> {
                         addType: BottomSheetType.review,
                         restroom: restroom,
                         screenBuilder: (context) => ReviewScreen(
-                          hintText: "Write your review here...",
+                          restroomName: restroom.name,
                           restroomId: restroom.id,
                         ),
                       ),

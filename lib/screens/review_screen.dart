@@ -7,15 +7,13 @@ import '../models/review.dart';
 
 class ReviewScreen extends StatefulWidget {
   final TextEditingController? controller;
-  final bool obscureText;
-  final String hintText;
+  final String restroomName;
   final int? restroomId;
 
   const ReviewScreen({
     super.key,
     this.controller,
-    this.obscureText = false,
-    required this.hintText,
+    required this.restroomName,
     this.restroomId,
   });
 
@@ -124,10 +122,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Center(
+              Center(
                 child: Text(
-                  'Review page here',
-                  style: TextStyle(
+                  widget.restroomName,
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -152,7 +150,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 rollSizeFactor: 0.5,
               ),
 
-              // Slider beneath the TP; your slider already snaps (divisions: 4)
+              // Slider beneath the TP
               Slider(
                 value: _rating,
                 min: 1.0,
@@ -171,14 +169,13 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: TextField(
                   controller: _controller,
-                  obscureText: widget.obscureText,
                   minLines: 4,
                   maxLines: 8,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.0),
                     ),
-                    hintText: widget.hintText,
+                    hintText: "It smelled like...",
                     hintStyle: GoogleFonts.quicksand(
                       fontWeight: FontWeight.bold,
                       color: Colors.grey,
