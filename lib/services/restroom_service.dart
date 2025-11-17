@@ -93,7 +93,7 @@ class RestroomService {
 
       return restrooms;
     } catch (e) {
-      print('Error fetching restroom locations: $e');
+      debugPrint('Error fetching restroom locations: $e');
       return [];
     }
   }
@@ -107,7 +107,7 @@ class RestroomService {
           .single();
       return Restroom.fromJson(response);
     } catch (e) {
-      print('Error fetching restroom by id: $e');
+      debugPrint('Error fetching restroom by id: $e');
       return null;
     }
   }
@@ -135,7 +135,7 @@ class RestroomService {
         attributes: [],
       );
     } catch (e) {
-      print('Error adding restroom: $e');
+      debugPrint('Error adding restroom: $e');
       rethrow;
     }
   }

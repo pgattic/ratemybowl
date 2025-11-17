@@ -21,7 +21,7 @@ class ReviewService {
 
       return reviews;
     } catch (e) {
-      print('Error fetching reviews by restroom id: $e');
+      debugPrint('Error fetching reviews by restroom id: $e');
       return [];
     }
   }
@@ -30,7 +30,7 @@ class ReviewService {
     try {
       await Supabase.instance.client.from('review').insert(review.toJson());
     } catch (e) {
-      print('Error adding review: $e');
+      debugPrint('Error adding review: $e');
       rethrow;
     }
   }

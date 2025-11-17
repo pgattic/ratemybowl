@@ -36,7 +36,6 @@ class _DebugScreenState extends State<DebugScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Restroom added at Lat: ${result['latitude']}, Lng: ${result['longitude']}')),
                       );
-                      print('Added restroom at Lat: ${result['latitude']}, Lng: ${result['longitude']}');
                     }
                   },
                   child: const Text('Screen'),
@@ -56,7 +55,6 @@ class _DebugScreenState extends State<DebugScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Review received')),
                       );
-                      print('Received review: ${result['text']} rating: ${result['rating']}');
                     }
                   },
                   child: const Text('Review'),
