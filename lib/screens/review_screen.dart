@@ -1,5 +1,13 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:rate_my_bowl/widgets/toilet_paper.dart';
+
+/// REVIEW SCREEN + TOILET PAPER WIDGET
+/// Copy into your project. This file contains:
+/// - ReviewScreen (your original screen, slightly adapted)
+/// - ToiletPaperWidget (standalone, reusable)
+/// - _ToiletPaperPainter (simple CustomPainter)
 
 class ReviewScreen extends StatefulWidget {
   final TextEditingController? controller;
@@ -12,14 +20,17 @@ class ReviewScreen extends StatefulWidget {
     this.obscureText = false,
     required this.hintText,
   });
-    @override
+
+  @override
   State<ReviewScreen> createState() => _ReviewScreenState();
 }
 
 class _ReviewScreenState extends State<ReviewScreen> {
   late final TextEditingController _controller;
   late final bool _ownsController;
-  double _rating = 3.0;
+  double _rating = 3.0; // 1..5, slider snaps to integers
+
+  static const int maxSheets = 5;
 
   @override
   void initState() {
@@ -35,6 +46,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
     }
     super.dispose();
   }
+
+  int get _currentSheetIndex => _rating.round().clamp(1, maxSheets);
 
   @override
   Widget build(BuildContext context) {
@@ -59,17 +72,28 @@ class _ReviewScreenState extends State<ReviewScreen> {
               const SizedBox(height: 12),
               Center(
                 child: Text(
-                  'Rating: ${_rating.toStringAsFixed(1)}',
+                  'Rating (sheets): ${_currentSheetIndex.toString()}',
                   style: const TextStyle(color: Colors.white),
                 ),
               ),
-              const SizedBox(height: 8),
+
+              const SizedBox(height: 16),
+
+              // Toilet paper widget — horizontally oriented
+              AnimatedToiletPaperRoll(
+                sheets: _currentSheetIndex,
+                maxSheets: 5,
+                width: MediaQuery.of(context).size.width - 48,
+                rollSizeFactor: 0.5,
+              ),
+
+              // Slider beneath the TP; your slider already snaps (divisions: 4)
               Slider(
                 value: _rating,
                 min: 1.0,
-                max: 5.0,
-                divisions: 4,
-                label: _rating.toStringAsFixed(1),
+                max: maxSheets.toDouble(),
+                divisions: maxSheets - 1, // snaps to integers
+                label: _currentSheetIndex.toString(),
                 onChanged: (double value) {
                   setState(() {
                     _rating = value;
@@ -77,6 +101,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 },
               ),
               const SizedBox(height: 8),
+
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: TextField(
@@ -98,6 +123,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -108,7 +134,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       final result = {'text': note, 'rating': _rating};
                       if (note.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please enter a review note')),
+                          const SnackBar(
+                            content: Text('Please enter a review note'),
+                          ),
                         );
                         return;
                       }
@@ -131,7 +159,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     child: const Text('Cancel'),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),
