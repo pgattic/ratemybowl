@@ -46,7 +46,7 @@ class _DebugScreenState extends State<DebugScreen> {
                   onPressed: () async {
                     final result = await Navigator.push<Map<String, dynamic>>(
                       context,
-                      MaterialPageRoute(builder: (_) => const ReviewScreen(hintText: 'Write your review...')),
+                      MaterialPageRoute(builder: (_) => const ReviewScreen(restroomName: 'Sample Restroom')),
                     );
                     if (result != null && result['text'] != null && (result['text'] as String).isNotEmpty) {
                       setState(() {

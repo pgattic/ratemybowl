@@ -1,30 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:rate_my_bowl/widgets/toilet_paper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/review_service.dart';
 import '../models/review.dart';
 
 class ReviewScreen extends StatefulWidget {
   final TextEditingController? controller;
-  final bool obscureText;
-  final String hintText;
+  final String restroomName;
   final int? restroomId;
 
   const ReviewScreen({
     super.key,
     this.controller,
-    this.obscureText = false,
-    required this.hintText,
+    required this.restroomName,
     this.restroomId,
   });
-    @override
+
+  @override
   State<ReviewScreen> createState() => _ReviewScreenState();
 }
 
 class _ReviewScreenState extends State<ReviewScreen> {
   late final TextEditingController _controller;
   late final bool _ownsController;
-  double _rating = 3.0;
+  double _rating = 3.0; // 1..5, slider snaps to integers
+
+  static const int maxSheets = 5;
   bool _isSubmitting = false;
 
   @override
@@ -42,6 +44,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     super.dispose();
   }
 
+  int get _currentSheetIndex => _rating.round().clamp(1, maxSheets);
   Future<void> _submitReview() async {
     final note = _controller.text.trim();
     
@@ -92,7 +95,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
       await ReviewService.instance.addReview(review);
 
       if (mounted) {
-        Navigator.of(context).pop({'success': true, 'text': note, 'rating': _rating});
+        Navigator.of(context).pop(review);
       }
     } catch (e) {
       if (mounted) {
@@ -119,10 +122,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Center(
+              Center(
                 child: Text(
-                  'Review page here',
-                  style: TextStyle(
+                  widget.restroomName,
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -130,19 +133,22 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Center(
-                child: Text(
-                  'Rating: ${_rating.toStringAsFixed(1)}',
-                  style: const TextStyle(color: Colors.white),
-                ),
+
+              // Toilet paper widget — horizontally oriented
+              AnimatedToiletPaperRoll(
+                sheets: _currentSheetIndex,
+                maxSheets: 5,
+                width: MediaQuery.of(context).size.width - 48,
+                rollSizeFactor: 0.5,
               ),
-              const SizedBox(height: 8),
+
+              // Slider beneath the TP
               Slider(
                 value: _rating,
                 min: 1.0,
-                max: 5.0,
-                divisions: 4,
-                label: _rating.toStringAsFixed(1),
+                max: maxSheets.toDouble(),
+                divisions: maxSheets - 1, // snaps to integers
+                label: _currentSheetIndex.toString(),
                 onChanged: (double value) {
                   setState(() {
                     _rating = value;
@@ -150,18 +156,18 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 },
               ),
               const SizedBox(height: 8),
+
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: TextField(
                   controller: _controller,
-                  obscureText: widget.obscureText,
                   minLines: 4,
                   maxLines: 8,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.0),
                     ),
-                    hintText: widget.hintText,
+                    hintText: "It smelled like...",
                     hintStyle: GoogleFonts.quicksand(
                       fontWeight: FontWeight.bold,
                       color: Colors.grey,
@@ -171,6 +177,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -195,7 +202,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     child: const Text('Cancel'),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),
