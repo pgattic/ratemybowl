@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:rate_my_bowl/models/restroom.dart';
 
-enum RestroomType { men, women, other }
-
 class RestroomPin extends StatelessWidget {
   final Gender restroomGender;
   final bool
