@@ -95,103 +95,111 @@ class _LoginScreenState extends State<LoginScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.lightBlueAccent,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              RateMyBowlLogo(),
-              const SizedBox(height: 16),
+      body: Stack(
+        children: [
+          // Centered content stays exactly where it was
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RateMyBowlLogo(),
+                  const SizedBox(height: 16),
 
-              // Fade-in input fields + buttons
-              FadeTransition(
-                opacity: _fadeInAnimation,
-                child: Column(
-                  children: [
-                    AccountInputField(
-                      hintText: "email",
-                      controller: _emailController,
-                    ),
-                    const SizedBox(height: 16),
-                    AccountInputField(
-                      hintText: "password",
-                      obscureText: true,
-                      controller: _passwordController,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Login button
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _handleLogin,
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                  FadeTransition(
+                    opacity: _fadeInAnimation,
+                    child: Column(
+                      children: [
+                        AccountInputField(
+                          hintText: "email",
+                          controller: _emailController,
+                        ),
+                        const SizedBox(height: 16),
+                        AccountInputField(
+                          hintText: "password",
+                          obscureText: true,
+                          controller: _passwordController,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _isLoading ? null : _handleLogin,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Text("log in"),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const RegisterScreen(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                "create an account",
+                                style: GoogleFonts.quicksand(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
                               ),
-                            )
-                          : const Text("log in"),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Links row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const RegisterScreen(),
-                              ),
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Text(
-                              "create an account",
-                              style: GoogleFonts.quicksand(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ForgotPasswordScreen(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                "forgot my password",
+                                style: GoogleFonts.quicksand(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const ForgotPasswordScreen(),
-                              ),
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Text(
-                              "forgot my password",
-                              style: GoogleFonts.quicksand(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+
+          // Copyright pinned to bottom without affecting anything
+          Positioned(
+            bottom: 16,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                '© 2025 Tinkle Thinkers',
+                style: TextStyle(fontSize: 16.0, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
