@@ -116,9 +116,6 @@ class RestroomService {
   Future<Restroom> addRestroom(Restroom restroom) async {
     try {
       final data = restroom.toJson();
-      // We don't want to set the restroom_id - let the database generate it automatically for us, otherwise we'll get an error
-      data.remove('restroom_id');
-      
       final response = await Supabase.instance.client
           .from('restroom')
           .insert(data)
