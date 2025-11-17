@@ -95,7 +95,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
       await ReviewService.instance.addReview(review);
 
       if (mounted) {
-        Navigator.of(context).pop({'success': true, 'text': note, 'rating': _rating});
+        Navigator.of(context).pop(review);
       }
     } catch (e) {
       if (mounted) {
