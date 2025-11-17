@@ -8,17 +8,22 @@ import 'package:rate_my_bowl/widgets/toilet_paper.dart';
 /// - ReviewScreen (your original screen, slightly adapted)
 /// - ToiletPaperWidget (standalone, reusable)
 /// - _ToiletPaperPainter (simple CustomPainter)
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/review_service.dart';
+import '../models/review.dart';
 
 class ReviewScreen extends StatefulWidget {
   final TextEditingController? controller;
   final bool obscureText;
   final String hintText;
+  final int? restroomId;
 
   const ReviewScreen({
     super.key,
     this.controller,
     this.obscureText = false,
     required this.hintText,
+    this.restroomId,
   });
 
   @override
@@ -31,6 +36,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
   double _rating = 3.0; // 1..5, slider snaps to integers
 
   static const int maxSheets = 5;
+  double _rating = 3.0;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -48,6 +55,72 @@ class _ReviewScreenState extends State<ReviewScreen> {
   }
 
   int get _currentSheetIndex => _rating.round().clamp(1, maxSheets);
+  Future<void> _submitReview() async {
+    final note = _controller.text.trim();
+    
+    if (note.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a review note'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (widget.restroomId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: Restroom ID not provided'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: You must be logged in to submit a review'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final review = Review(
+        restroomId: widget.restroomId!,
+        userId: user.id,
+        stars: _rating.round(),
+        reviewDt: DateTime.now(),
+        notes: note.isEmpty ? null : note,
+      );
+
+      await ReviewService.instance.addReview(review);
+
+      if (mounted) {
+        Navigator.of(context).pop({'success': true, 'text': note, 'rating': _rating});
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error submitting review: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,33 +202,22 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton(
-                    onPressed: () {
-                      final note = _controller.text.trim();
-                      final result = {'text': note, 'rating': _rating};
-                      if (note.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please enter a review note'),
-                          ),
-                        );
-                        return;
-                      }
-                      Navigator.of(context).pop(result);
-                    },
-                    child: const Text('Submit'),
+                    onPressed: _isSubmitting ? null : _submitReview,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Submit'),
                   ),
                   const SizedBox(width: 12),
                   OutlinedButton(
-                    onPressed: () {
-                      setState(() {
-                        _controller.clear();
-                        _rating = 3.0;
-                      });
-                      FocusScope.of(context).unfocus();
-                      final note = _controller.text.trim();
-                      final result = {'text': note, 'rating': _rating};
-                      Navigator.of(context).pop(result);
-                    },
+                    onPressed: _isSubmitting
+                        ? null
+                        : () {
+                            Navigator.of(context).pop();
+                          },
                     child: const Text('Cancel'),
                   ),
                 ],

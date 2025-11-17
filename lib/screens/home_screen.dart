@@ -5,9 +5,7 @@ import 'package:rate_my_bowl/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/screens/map_screen.dart';
 import 'package:rate_my_bowl/screens/list_screen.dart';
-import 'package:rate_my_bowl/screens/review_screen.dart';
 import 'package:rate_my_bowl/screens/settings_screen.dart';
-import 'package:rate_my_bowl/screens/adding_bathroom_screen.dart';
 import 'package:rate_my_bowl/screens/debug_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -25,11 +23,11 @@ class _HomeScreenState extends State<HomeScreen> {
     const ListScreen(),
     const SettingsScreen(),
     const DebugScreen(),
-    //const ReviewScreen(hintText: "Write your review here..."),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Colors.lightBlueAccent,
       appBar: AppBar(
@@ -74,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.lightBlueAccent,
-        selectedItemColor: Colors.white,
+        selectedItemColor: colors.onPrimary,
         unselectedItemColor: Colors.white70,
         currentIndex: _selectedIndex,
         onTap: (index) {

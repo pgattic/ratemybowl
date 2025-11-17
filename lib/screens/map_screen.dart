@@ -1,13 +1,17 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+
 import 'package:rate_my_bowl/controllers/location_controller.dart';
-import 'package:rate_my_bowl/screens/adding_bathroom_screen.dart';
+import 'package:rate_my_bowl/screens/adding_restroom_screen.dart';
 import 'package:rate_my_bowl/screens/review_screen.dart';
 import 'package:rate_my_bowl/widgets/rmb_bottom_sheet.dart';
-import '../widgets/bathroom_pin.dart';
-import '../models/bathroom_location.dart';
+import 'package:rate_my_bowl/services/restroom_service.dart';
+import 'package:rate_my_bowl/models/restroom.dart';
+import '../widgets/restroom_pin.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -17,64 +21,208 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  BathroomLocation? selectedLocation;
-  late final MapController _mapController;
+  // Map + restroom state
+  final MapController _mapController = MapController();
+  final List<Restroom> _restrooms = [];
+
+  Restroom? _selectedRestroom;
+  bool _isLoadingRestrooms = false;
+  LatLng? _lastFetchedCenter;
+
+  // Debouncing & zoom
+  Timer? _debounceTimer;
+  LatLng? _pendingCenter;
+  double _currentZoom = _defaultZoom;
+
+  // User/location
+  late final LocationController _locationController;
   bool _didCenterOnFirstFix = false;
 
+  // Constants
   static const _defaultCenter = LatLng(40.24875188987069, -111.65141681875589);
   static const _defaultZoom = 18.0;
+  static const _minFetchDistance = 200.0; // meters
+  static const _debounceDelay = Duration(milliseconds: 800);
 
   @override
   void initState() {
     super.initState();
-    _mapController = MapController();
+
+    // Grab controller once, and reuse it. This avoids using context in dispose.
+    _locationController = context.read<LocationController>();
+
+    // Kick off location init after first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LocationController>().init();
+      _locationController.init();
+
+      final userLocation = _locationController.userLatLong;
+      final initialCenter = userLocation ?? _defaultCenter;
+
+      // Center map and perform an initial fetch around this point.
+      _mapController.move(initialCenter, _defaultZoom);
+      _currentZoom = _defaultZoom;
+      _fetchRestrooms(initialCenter, zoom: _defaultZoom, force: true);
     });
   }
 
   @override
   void dispose() {
-    context.read<LocationController>().disposeController();
+    _debounceTimer?.cancel();
+    // DO NOT dispose the LocationController here; Provider owns it.
     super.dispose();
+  }
+
+  // ==========================
+  // Fetching logic
+  // ==========================
+
+  double _calculateRadiusFromZoom(double zoom) {
+    // Rough heuristic: larger radius at low zoom.
+    const baseRadius = 500.0; // meters
+    const maxZoom = 18.0;
+    final radius = baseRadius * math.pow(2, maxZoom - zoom);
+    return radius.clamp(200.0, 100000.0);
+  }
+
+  double _approximateDistanceInMeters(LatLng a, LatLng b) {
+    // Rough approximation; good enough for "should we refetch?" decisions.
+    const metersPerDegreeLat = 111000.0;
+    final avgLatRad = (a.latitude + b.latitude) / 2.0 * math.pi / 180.0;
+    final metersPerDegreeLng = 111000.0 * math.cos(avgLatRad);
+
+    final latMeters = (a.latitude - b.latitude).abs() * metersPerDegreeLat;
+    final lngMeters = (a.longitude - b.longitude).abs() * metersPerDegreeLng;
+
+    return math.sqrt(latMeters * latMeters + lngMeters * lngMeters);
+  }
+
+  void _debouncedFetchRestrooms(LatLng center, {double? zoom}) {
+    _debounceTimer?.cancel();
+
+    _pendingCenter = center;
+    if (zoom != null) {
+      _currentZoom = zoom;
+    }
+
+    _debounceTimer = Timer(_debounceDelay, () {
+      if (!mounted || _pendingCenter == null) return;
+      final centerToFetch = _pendingCenter!;
+      _pendingCenter = null;
+
+      _fetchRestrooms(centerToFetch, zoom: _currentZoom);
+    });
+  }
+
+  Future<void> _fetchRestrooms(
+    LatLng center, {
+    bool force = false,
+    double? zoom,
+  }) async {
+    if (!mounted) return;
+
+    if (!force) {
+      // Avoid overlapping fetches; just schedule a debounced one instead.
+      if (_isLoadingRestrooms) {
+        _debouncedFetchRestrooms(center, zoom: zoom);
+        return;
+      }
+    } else {
+      // Clear any pending debounce when forcing.
+      _debounceTimer?.cancel();
+      _debounceTimer = null;
+      _pendingCenter = null;
+    }
+
+    final usedZoom = zoom ?? _currentZoom;
+    final radius = _calculateRadiusFromZoom(usedZoom);
+
+    // Skip fetches if user hasn't moved much and zoom hasn't changed.
+    if (!force && _lastFetchedCenter != null) {
+      final distance = _approximateDistanceInMeters(center, _lastFetchedCenter!);
+      if (distance < _minFetchDistance) {
+        return;
+      }
+    }
+
+    setState(() {
+      _isLoadingRestrooms = true;
+      _currentZoom = usedZoom;
+    });
+
+    try {
+      final restrooms = await RestroomService.instance.getRestroomLocations(
+        lat: center.latitude,
+        lng: center.longitude,
+        radius: radius,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _restrooms
+          ..clear()
+          ..addAll(restrooms);
+        _isLoadingRestrooms = false;
+        _lastFetchedCenter = center;
+      });
+    } catch (e, st) {
+      // TODO: swap this for proper error tracking / snackbar.
+      debugPrint('Error fetching restrooms: $e\n$st');
+      if (!mounted) return;
+
+      setState(() {
+        _isLoadingRestrooms = false;
+      });
+    }
   }
 
   void _centerOn(LatLng pos, {double zoom = _defaultZoom}) {
     _mapController.move(pos, zoom);
-    _mapController.rotate(0.0);
   }
+
+  // ==========================
+  // Build
+  // ==========================
 
   @override
   Widget build(BuildContext context) {
-    final bathroomLocations = MockBathroomData.getBathroomLocations();
-    final lc = context.read<LocationController>();
-
-    LatLng center = lc.userLatLong ?? _defaultCenter;
-    double zoom = _defaultZoom;
+    final userLocation = _locationController.userLatLong;
+    final initialCenter = userLocation ?? _defaultCenter;
 
     return Scaffold(
       body: FlutterMap(
         mapController: _mapController,
         options: MapOptions(
-          initialCenter: center,
-          initialZoom: zoom,
+          initialCenter: initialCenter,
+          initialZoom: _currentZoom,
           minZoom: 3.0,
           maxZoom: 24.0,
-          onMapEvent: (e) {
-            final cam = e.camera;
-            center = cam.center;
-            zoom = cam.zoom;
+          onMapEvent: (event) {
+            final cam = event.camera;
+            final newCenter = cam.center;
+            final newZoom = cam.zoom;
+
+            // Once we've done any initial fetch, we can base everything on camera.
+            if (_lastFetchedCenter != null || _didCenterOnFirstFix) {
+              _debouncedFetchRestrooms(newCenter, zoom: newZoom);
+            }
           },
-          onLongPress: (tapPosition, latLng) {
-            showModalBottomSheet(
+          onLongPress: (tapPosition, latLng) async {
+            final result = await showModalBottomSheet<Restroom>(
               context: context,
               barrierColor: Colors.black38,
               builder: (_) => RmbBottomSheet(
-                addType: "restroom",
+                addType: BottomSheetType.restroom,
                 screenBuilder: (context) =>
-                    AddingBathroomScreen(initCrossPos: latLng),
+                    AddingRestroomScreen(initCrossPos: latLng),
               ),
             );
+
+            if (result != null && mounted) {
+              setState(() {
+                _restrooms.add(result);
+              });
+            }
           },
         ),
         children: [
@@ -83,40 +231,71 @@ class _MapScreenState extends State<MapScreen> {
             userAgentPackageName: 'com.example.rate_my_bowl',
           ),
           MarkerLayer(
-            markers: bathroomLocations.map((location) {
+            markers: _restrooms.map((restroom) {
+              final isSelected = _selectedRestroom?.id == restroom.id;
               return Marker(
-                point: location.coordinates,
+                point: restroom.coordinates,
                 width: 40,
                 height: 50,
                 alignment: Alignment.topCenter,
-                child: BathroomPin(
-                  bathroomTypes: location.bathroomTypes,
-                  isSelected: selectedLocation?.id == location.id,
+                child: RestroomPin(
+                  restroomGender: restroom.gender,
+                  isSelected: isSelected,
                   onTap: () {
                     setState(() {
-                      selectedLocation = location;
+                      _selectedRestroom = restroom;
                     });
 
                     showModalBottomSheet(
                       context: context,
                       barrierColor: Colors.black38,
                       builder: (_) => RmbBottomSheet(
-                        addType: "review",
-                        screenBuilder: (context) =>
-                            ReviewScreen(hintText: "Write your review here..."),
+                        addType: BottomSheetType.review,
+                        restroom: restroom,
+                        screenBuilder: (context) => ReviewScreen(
+                          hintText: "Write your review here...",
+                          restroomId: restroom.id,
+                        ),
                       ),
-                    );
+                    ).then((result) async {
+                      if (!mounted) return;
+
+                      final success = result is Map && result['success'] == true;
+                      if (!success) return;
+
+                      final currentCenter = _mapController.camera.center;
+                      await _fetchRestrooms(
+                        currentCenter,
+                        zoom: _currentZoom,
+                        force: true,
+                      );
+
+                      if (!mounted) return;
+
+                      if (_selectedRestroom != null) {
+                        final updated = _restrooms.firstWhere(
+                          (r) => r.id == _selectedRestroom!.id,
+                          orElse: () => _selectedRestroom!,
+                        );
+                        setState(() {
+                          _selectedRestroom = updated;
+                        });
+                      }
+                    });
                   },
                 ),
               );
             }).toList(),
           ),
+
+          // User location marker + accuracy circle
           _UserLocationLayer(
             onFirstFix: (pos) {
-              if (!_didCenterOnFirstFix) {
-                _didCenterOnFirstFix = true;
-                _centerOn(pos, zoom: _defaultZoom);
-              }
+              if (_didCenterOnFirstFix || !mounted) return;
+
+              _didCenterOnFirstFix = true;
+              _centerOn(pos, zoom: _defaultZoom);
+              _fetchRestrooms(pos, zoom: _defaultZoom, force: true);
             },
           ),
         ],
@@ -125,31 +304,40 @@ class _MapScreenState extends State<MapScreen> {
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Recenter on user
           FloatingActionButton(
             heroTag: "recenter",
             onPressed: () {
-              final pos = context.read<LocationController>().userLatLong;
+              final pos = _locationController.userLatLong;
               if (pos != null) {
-                setState(() {
-                  _centerOn(pos, zoom: _defaultZoom);
-                });
+                _centerOn(pos, zoom: _defaultZoom);
+                _fetchRestrooms(pos, zoom: _defaultZoom, force: true);
               }
             },
             child: const Icon(Icons.my_location),
           ),
           const SizedBox(height: 12),
+
+          // Add restroom at current map center
           FloatingActionButton(
             heroTag: "add",
-            onPressed: () {
-              showModalBottomSheet(
+            onPressed: () async {
+              final center = _mapController.camera.center;
+              final result = await showModalBottomSheet<Restroom>(
                 context: context,
                 barrierColor: Colors.black38,
                 builder: (_) => RmbBottomSheet(
-                  addType: "restroom",
+                  addType: BottomSheetType.restroom,
                   screenBuilder: (context) =>
-                      AddingBathroomScreen(initCrossPos: center),
+                      AddingRestroomScreen(initCrossPos: center),
                 ),
               );
+
+              if (result != null && mounted) {
+                setState(() {
+                  _restrooms.add(result);
+                });
+              }
             },
             child: const Icon(Icons.add),
           ),
@@ -158,6 +346,10 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 }
+
+// ==========================
+// User location layer
+// ==========================
 
 class _UserLocationLayer extends StatefulWidget {
   final void Function(LatLng pos)? onFirstFix;
@@ -179,9 +371,11 @@ class _UserLocationLayerState extends State<_UserLocationLayer> {
       (lc) => lc.accuracy,
     );
 
+    // Fire callback once when we get first non-null fix.
     if (userPos != null && !_hasCalledFirstFix) {
       _hasCalledFirstFix = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         widget.onFirstFix?.call(userPos);
       });
     }
@@ -201,7 +395,6 @@ class _UserLocationLayerState extends State<_UserLocationLayer> {
               ),
             ],
           ),
-
         if (userPos != null)
           MarkerLayer(
             markers: [

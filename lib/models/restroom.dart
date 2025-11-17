@@ -2,16 +2,19 @@
 
 import 'package:latlong2/latlong.dart';
 
+enum Gender { male, female, unisex }
+
 class Restroom {
+  final int? id;
   final String name;
   final LatLng coordinates;
-  final String gender;
+  final Gender gender;
   final double rating;
   final int reviewCount;
   final List<String> attributes;
 
-
   const Restroom({
+    this.id,
     required this.name,
     required this.coordinates,
     required this.gender,
@@ -22,9 +25,13 @@ class Restroom {
 
   factory Restroom.fromJson(Map<String, dynamic> json) {
     return Restroom(
+      id: json['restroom_id'],
       name: json['name'],
-      coordinates: LatLng(json['coordinates']['lat'], json['coordinates']['lng']),
-      gender: json['gender'],
+      coordinates: LatLng(
+        json['coordinates']['lat'],
+        json['coordinates']['lng'],
+      ),
+      gender: getGender(json['gender']),
       rating: json['rating'],
       reviewCount: json['review_count'],
       attributes: json['attributes'],
@@ -34,11 +41,25 @@ class Restroom {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
-      'coordinates': coordinates.toString(),
-      'gender': gender,
-      'rating': rating,
-      'reviewCount': reviewCount,
-      'attributes': attributes,
+      'coordinate': 'SRID=4326;POINT(${coordinates.longitude} ${coordinates.latitude})',
+      'gender': genderInt,
+    };
+  }
+
+  static Gender getGender(int genderInt) {
+    return switch (genderInt) {
+      0 => Gender.unisex,
+      1 => Gender.male,
+      2 => Gender.female,
+      _ => throw ArgumentError("Unexpected Gender enum value: $genderInt"),
+    };
+  }
+
+  int get genderInt {
+    return switch (gender) {
+      Gender.unisex => 0,
+      Gender.male => 1,
+      Gender.female => 2,
     };
   }
 }
