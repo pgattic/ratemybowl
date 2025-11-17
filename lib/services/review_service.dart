@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:rate_my_bowl/models/review.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
