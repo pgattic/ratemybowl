@@ -194,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen>
             right: 0,
             child: Center(
               child: Text(
-                '© TinkleThinkers 2025',
+                '© 2025 Tinkle Thinkers',
                 style: TextStyle(fontSize: 16.0, color: Colors.white),
               ),
             ),
