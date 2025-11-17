@@ -133,14 +133,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Center(
-                child: Text(
-                  'Rating (sheets): ${_currentSheetIndex.toString()}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-
-              const SizedBox(height: 16),
 
               // Toilet paper widget — horizontally oriented
               AnimatedToiletPaperRoll(
