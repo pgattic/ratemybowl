@@ -51,4 +51,3 @@ app.*.map.json
 /ios_backup/
 .metadata
 
-/lib/screens/review_screen_overlay.dart

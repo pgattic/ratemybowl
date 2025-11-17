@@ -1,13 +1,6 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rate_my_bowl/widgets/toilet_paper.dart';
-
-/// REVIEW SCREEN + TOILET PAPER WIDGET
-/// Copy into your project. This file contains:
-/// - ReviewScreen (your original screen, slightly adapted)
-/// - ToiletPaperWidget (standalone, reusable)
-/// - _ToiletPaperPainter (simple CustomPainter)
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/review_service.dart';
 import '../models/review.dart';
@@ -36,7 +29,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
   double _rating = 3.0; // 1..5, slider snaps to integers
 
   static const int maxSheets = 5;
-  double _rating = 3.0;
   bool _isSubmitting = false;
 
   @override
