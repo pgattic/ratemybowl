@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:rate_my_bowl/widgets/custom_input_field.dart';
 import '../models/restroom.dart';
 import '../services/restroom_service.dart';
 
@@ -94,25 +94,21 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
           spacing: 12.0,
           children: [
             Text('Restroom Name'),
-            TextField(
+
+            CustomInputField(
+              hintText: "Restroom name",
               controller: _nameController,
-              decoration: InputDecoration(
-                hintText: 'Restroom Name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                filled: true,
-                fillColor: Colors.white,
-              ),
+              borderRadius: 16.0,
             ),
             Text('Gender'),
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(20.0),
               ),
               child: DropdownButtonFormField<Gender>(
                 initialValue: _selectedGender,
+                style: const TextStyle(color: Color.fromARGB(255, 64, 64, 64)),
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
@@ -125,7 +121,7 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
                 items: Gender.values.map((gender) {
                   return DropdownMenuItem<Gender>(
                     value: gender,
-                    child: Text(gender.name, style: GoogleFonts.quicksand()),
+                    child: Text(gender.name),
                   );
                 }).toList(),
                 onChanged: (Gender? newValue) {
@@ -140,7 +136,7 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16.0),
+                  borderRadius: BorderRadius.circular(30.0),
                 ),
                 clipBehavior: Clip.hardEdge,
                 child: Stack(
@@ -185,10 +181,7 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
               ),
               child: Text(
                 'Position: ${_centerLat.toStringAsFixed(6)}, ${_centerLng.toStringAsFixed(6)}',
-                style: GoogleFonts.quicksand(
-                  color: Colors.white,
-                  fontSize: 14.0,
-                ),
+                style: TextStyle(fontSize: 14.0),
               ),
             ),
             Padding(

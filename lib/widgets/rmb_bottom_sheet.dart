@@ -27,10 +27,10 @@ class RmbBottomSheet extends StatefulWidget {
   });
 
   @override
-  State<RmbBottomSheet> createState() => _ReviewBottomSheetState();
+  State<RmbBottomSheet> createState() => _RmbBottomSheetState();
 }
 
-class _ReviewBottomSheetState extends State<RmbBottomSheet> {
+class _RmbBottomSheetState extends State<RmbBottomSheet> {
   Map<String, Object>? display;
   List<Review> _reviews = [];
   bool _isLoadingReviews = false;
@@ -46,12 +46,12 @@ class _ReviewBottomSheetState extends State<RmbBottomSheet> {
   Future<void> _loadReviews() async {
     if (widget.restroom?.id == null) return;
 
-    setState(() {
-      _isLoadingReviews = true;
-    });
+    setState(() => _isLoadingReviews = true);
 
     try {
-      final reviews = await ReviewService.instance.getReviewsByRestroomId(widget.restroom!.id!);
+      final reviews = await ReviewService.instance.getReviewsByRestroomId(
+        widget.restroom!.id!,
+      );
       if (mounted) {
         setState(() {
           _reviews = reviews;
@@ -61,9 +61,7 @@ class _ReviewBottomSheetState extends State<RmbBottomSheet> {
     } catch (e) {
       debugPrint('Error loading reviews: $e');
       if (mounted) {
-        setState(() {
-          _isLoadingReviews = false;
-        });
+        setState(() => _isLoadingReviews = false);
       }
     }
   }
@@ -94,172 +92,183 @@ class _ReviewBottomSheetState extends State<RmbBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.7,
-      ),
-      child: SingleChildScrollView(
-        child: Padding(
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16.0)),
+      child: Container(
+        color: const Color.fromRGBO(64, 196, 255, 1),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-          if (widget.restroom != null) ...[
-            Text(
-              widget.restroom!.name,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 20),
-                    const SizedBox(width: 4),
-                    Text(
-                      widget.restroom!.rating > 0
-                          ? widget.restroom!.rating.toStringAsFixed(1)
-                          : 'No ratings',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    const Icon(Icons.reviews, size: 20),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${widget.restroom!.reviewCount} ${widget.restroom!.reviewCount == 1 ? 'review' : 'reviews'}',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    const Icon(Icons.wc, size: 20),
-                    const SizedBox(width: 4),
-                    Text(
-                      _getGenderDisplayName(widget.restroom!.gender),
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const Divider(height: 32),
-          ],
-          if (display != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: Text(
-                '${widget.addType.displayName}: $display',
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: widget.screenBuilder),
-                );
-
-                if (result != null) {
-                  setState(() {
-                    display = result is Map ? Map<String, Object>.from(result) : {'result': result.toString()};
-                  });
-                  
-                  if (result is Map && result['success'] == true) {
-                    _loadReviews();
-                  }
-                  
-                  Navigator.of(context).pop(result);
-                }
-              },
-              child: Text('Add ${widget.addType.displayName}'),
-            ),
-          ),
-          if (widget.restroom != null && widget.addType == BottomSheetType.review) ...[
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 8),
-            Text(
-              'Reviews',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (_isLoadingReviews)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            else if (_reviews.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'No reviews yet. Be the first to review!',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontStyle: FontStyle.italic,
+              if (widget.restroom != null) ...[
+                Text(
+                  widget.restroom!.name,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              )
-            else
-              ..._reviews.map((review) {
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8.0),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            ...List.generate(5, (i) {
-                              return Icon(
-                                i < review.stars ? Icons.star : Icons.star_border,
-                                color: Colors.amber,
-                                size: 16,
-                              );
-                            }),
-                            const SizedBox(width: 8),
-                            Text(
-                              _formatDate(review.reviewDt),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
+                        const Icon(Icons.star, color: Colors.amber, size: 20),
+                        const SizedBox(width: 4),
+                        Text(
+                          widget.restroom!.rating > 0
+                              ? widget.restroom!.rating.toStringAsFixed(1)
+                              : 'No ratings',
+                          style: const TextStyle(fontSize: 16),
                         ),
-                        if (review.notes != null && review.notes!.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            review.notes!,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ],
                       ],
                     ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.reviews,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${widget.restroom!.reviewCount} ${widget.restroom!.reviewCount == 1 ? 'review' : 'reviews'}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Icon(Icons.wc, color: Colors.white, size: 20),
+                        const SizedBox(width: 4),
+                        Text(
+                          _getGenderDisplayName(widget.restroom!.gender),
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const Divider(
+                  color: const Color.fromARGB(255, 40, 125, 165),
+                  height: 32,
+                ),
+              ],
+              if (display != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Text(
+                    '${widget.addType.displayName}: $display',
+                    style: const TextStyle(fontSize: 16),
                   ),
-                );
-              }),
-          ],
+                ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: widget.screenBuilder),
+                    );
+                    if (result != null) {
+                      setState(() {
+                        display = result is Map
+                            ? Map<String, Object>.from(result)
+                            : {'result': result.toString()};
+                      });
+                      if (result is Map && result['success'] == true) {
+                        _loadReviews();
+                      }
+                      Navigator.of(context).pop(result);
+                    }
+                  },
+                  child: Text('Add ${widget.addType.displayName}'),
+                ),
+              ),
+              if (widget.restroom != null &&
+                  widget.addType == BottomSheetType.review)
+                ..._buildReviews(),
             ],
           ),
         ),
       ),
     );
+  }
+
+  List<Widget> _buildReviews() {
+    return [
+      const SizedBox(height: 16),
+      const Divider(color: const Color.fromARGB(255, 40, 125, 165), height: 0),
+      const SizedBox(height: 8),
+      const Text(
+        'Reviews',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 8),
+      if (_isLoadingReviews)
+        const Center(
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: CircularProgressIndicator(),
+          ),
+        )
+      else if (_reviews.isEmpty)
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'No reviews yet. Be the first to review!',
+            style: TextStyle(
+              color: const Color.fromARGB(255, 40, 125, 165),
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        )
+      else
+        ..._reviews.map(
+          (review) => Card(
+            margin: const EdgeInsets.only(bottom: 8.0),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      ...List.generate(5, (i) {
+                        return Icon(
+                          i < review.stars ? Icons.star : Icons.star_border,
+                          color: Colors.amber,
+                          size: 16,
+                        );
+                      }),
+                      const SizedBox(width: 8),
+                      Text(
+                        _formatDate(review.reviewDt),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                  if (review.notes != null && review.notes!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      review.notes!,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color.fromARGB(255, 64, 64, 64),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+    ];
   }
 }

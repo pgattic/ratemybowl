@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:rate_my_bowl/widgets/custom_input_field.dart';
 import 'package:rate_my_bowl/widgets/toilet_paper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/review_service.dart';
@@ -24,7 +24,7 @@ class ReviewScreen extends StatefulWidget {
 class _ReviewScreenState extends State<ReviewScreen> {
   late final TextEditingController _controller;
   late final bool _ownsController;
-  double _rating = 3.0; // 1..5, slider snaps to integers
+  double _rating = 3.0;
 
   static const int maxSheets = 5;
   bool _isSubmitting = false;
@@ -47,7 +47,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
   int get _currentSheetIndex => _rating.round().clamp(1, maxSheets);
   Future<void> _submitReview() async {
     final note = _controller.text.trim();
-    
+
     if (note.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -143,38 +143,37 @@ class _ReviewScreenState extends State<ReviewScreen> {
               ),
 
               // Slider beneath the TP
-              Slider(
-                value: _rating,
-                min: 1.0,
-                max: maxSheets.toDouble(),
-                divisions: maxSheets - 1, // snaps to integers
-                label: _currentSheetIndex.toString(),
-                onChanged: (double value) {
-                  setState(() {
-                    _rating = value;
-                  });
-                },
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  valueIndicatorTextStyle: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                child: Slider(
+                  value: _rating,
+                  min: 1.0,
+                  max: maxSheets.toDouble(),
+                  divisions: maxSheets - 1,
+                  label: _currentSheetIndex.toString(),
+                  onChanged: (value) {
+                    setState(() {
+                      _rating = value;
+                    });
+                  },
+                ),
               ),
+
               const SizedBox(height: 8),
 
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: TextField(
+                child: CustomInputField(
+                  hintText: "It smelled like...",
                   controller: _controller,
                   minLines: 4,
                   maxLines: 8,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
-                    hintText: "It smelled like...",
-                    hintStyle: GoogleFonts.quicksand(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
+                  borderRadius: 16,
                 ),
               ),
 

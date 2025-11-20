@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:rate_my_bowl/widgets/account_input_field.dart';
+import 'package:rate_my_bowl/widgets/custom_input_field.dart';
 import 'package:rate_my_bowl/services/auth_service.dart';
 import 'package:rate_my_bowl/widgets/bowl_logo.dart';
 
@@ -101,25 +100,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    style: GoogleFonts.quicksand(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    "create an account",
-                  ),
+                  Text(style: TextStyle(fontSize: 24.0), "create an account"),
                 ],
               ),
-              AccountInputField(
-                hintText: "email",
-                controller: _emailController,
-              ),
-              AccountInputField(
+              CustomInputField(hintText: "email", controller: _emailController),
+              CustomInputField(
                 hintText: "username",
                 controller: _usernameController,
               ),
-              AccountInputField(
+              CustomInputField(
                 hintText: "password",
                 obscureText: true,
                 controller: _passwordController,

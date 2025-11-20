@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/svg.dart';
 
 class RateMyBowlLogo extends StatelessWidget {
@@ -23,30 +22,14 @@ class RateMyBowlLogo extends StatelessWidget {
     return Row(
       mainAxisAlignment: alignment,
       children: [
-        Text(
-          "rate my ",
-          style: GoogleFonts.quicksand(
-            fontSize: fontSize * size,
-            fontWeight: FontWeight.bold,
-            color: useColor,
-            decoration: TextDecoration.none,
-          ),
-        ),
+        Text("rate my ", style: TextStyle(fontSize: fontSize * size)),
         SvgPicture.asset(
           "assets/toilet.svg",
           width: iconSize * size,
           height: iconSize * size,
           colorFilter: ColorFilter.mode(useColor, BlendMode.srcIn),
         ),
-        Text(
-          "owl",
-          style: GoogleFonts.quicksand(
-            fontSize: fontSize * size,
-            fontWeight: FontWeight.bold,
-            color: useColor,
-            decoration: TextDecoration.none,
-          ),
-        ),
+        Text("owl", style: TextStyle(fontSize: fontSize * size)),
       ],
     );
   }
