@@ -68,13 +68,8 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void dispose() {
     _debounceTimer?.cancel();
-    // DO NOT dispose the LocationController here; Provider owns it.
     super.dispose();
   }
-
-  // ==========================
-  // Fetching logic
-  // ==========================
 
   double _calculateRadiusFromZoom(double zoom) {
     // Rough heuristic: larger radius at low zoom.
@@ -138,7 +133,10 @@ class _MapScreenState extends State<MapScreen> {
 
     // Skip fetches if user hasn't moved much and zoom hasn't changed.
     if (!force && _lastFetchedCenter != null) {
-      final distance = _approximateDistanceInMeters(center, _lastFetchedCenter!);
+      final distance = _approximateDistanceInMeters(
+        center,
+        _lastFetchedCenter!,
+      );
       if (distance < _minFetchDistance) {
         return;
       }
@@ -180,13 +178,11 @@ class _MapScreenState extends State<MapScreen> {
     _mapController.move(pos, zoom);
   }
 
-  // ==========================
-  // Build
-  // ==========================
-
   @override
   Widget build(BuildContext context) {
-    final userLocation = _locationController.userLatLong;
+    final userLocation = context.select<LocationController, LatLng?>(
+      (lc) => lc.userLatLong,
+    );
     final initialCenter = userLocation ?? _defaultCenter;
 
     return Scaffold(
@@ -260,7 +256,8 @@ class _MapScreenState extends State<MapScreen> {
                     ).then((result) async {
                       if (!mounted) return;
 
-                      final success = result is Map && result['success'] == true;
+                      final success =
+                          result is Map && result['success'] == true;
                       if (!success) return;
 
                       final currentCenter = _mapController.camera.center;
@@ -305,18 +302,17 @@ class _MapScreenState extends State<MapScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Recenter on user
-          FloatingActionButton(
-            heroTag: "recenter",
-            onPressed: () {
-              final pos = _locationController.userLatLong;
-              if (pos != null) {
-                _centerOn(pos, zoom: _defaultZoom);
-                _fetchRestrooms(pos, zoom: _defaultZoom, force: true);
-              }
-            },
-            child: const Icon(Icons.my_location),
-          ),
-          const SizedBox(height: 12),
+          if (userLocation != null) ...[
+            FloatingActionButton(
+              heroTag: "recenter",
+              onPressed: () {
+                _centerOn(userLocation, zoom: _defaultZoom);
+                _fetchRestrooms(userLocation, zoom: _defaultZoom, force: true);
+              },
+              child: const Icon(Icons.my_location),
+            ),
+            const SizedBox(height: 12),
+          ],
 
           // Add restroom at current map center
           FloatingActionButton(
@@ -346,10 +342,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 }
-
-// ==========================
-// User location layer
-// ==========================
 
 class _UserLocationLayer extends StatefulWidget {
   final void Function(LatLng pos)? onFirstFix;
