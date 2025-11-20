@@ -96,6 +96,7 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
             Text('Restroom Name'),
             TextField(
               controller: _nameController,
+              maxLength: 50,
               decoration: InputDecoration(
                 hintText: 'Restroom Name',
                 border: OutlineInputBorder(
