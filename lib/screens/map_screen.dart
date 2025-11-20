@@ -242,42 +242,51 @@ class _MapScreenState extends State<MapScreen> {
                       _selectedRestroom = restroom;
                     });
 
+                    _centerOn(restroom.coordinates);
+
                     showModalBottomSheet(
-                      context: context,
-                      barrierColor: Colors.black38,
-                      builder: (_) => SelectedPinBottomSheet(
-                        restroom: restroom,
-                        screenBuilder: (context) => ReviewScreen(
-                          restroomName: restroom.name,
-                          restroomId: restroom.id,
-                        ),
-                      ),
-                    ).then((result) async {
-                      if (!mounted) return;
+                          context: context,
+                          barrierColor: Colors.black38,
+                          builder: (_) => SelectedPinBottomSheet(
+                            restroom: restroom,
+                            screenBuilder: (context) => ReviewScreen(
+                              restroomName: restroom.name,
+                              restroomId: restroom.id,
+                            ),
+                          ),
+                        )
+                        .then((result) async {
+                          if (!mounted) return;
 
-                      final success =
-                          result is Map && result['success'] == true;
-                      if (!success) return;
+                          final success =
+                              result is Map && result['success'] == true;
+                          if (!success) return;
 
-                      final currentCenter = _mapController.camera.center;
-                      await _fetchRestrooms(
-                        currentCenter,
-                        zoom: _currentZoom,
-                        force: true,
-                      );
+                          final currentCenter = _mapController.camera.center;
+                          await _fetchRestrooms(
+                            currentCenter,
+                            zoom: _currentZoom,
+                            force: true,
+                          );
 
-                      if (!mounted) return;
+                          if (!mounted) return;
 
-                      if (_selectedRestroom != null) {
-                        final updated = _restrooms.firstWhere(
-                          (r) => r.id == _selectedRestroom!.id,
-                          orElse: () => _selectedRestroom!,
-                        );
-                        setState(() {
-                          _selectedRestroom = updated;
+                          if (_selectedRestroom != null) {
+                            final updated = _restrooms.firstWhere(
+                              (r) => r.id == _selectedRestroom!.id,
+                              orElse: () => _selectedRestroom!,
+                            );
+                            setState(() {
+                              _selectedRestroom = updated;
+                            });
+                          }
+                        })
+                        .whenComplete(() {
+                          if (!mounted) return;
+                          setState(() {
+                            _selectedRestroom = null;
+                          });
                         });
-                      }
-                    });
                   },
                 ),
               );
