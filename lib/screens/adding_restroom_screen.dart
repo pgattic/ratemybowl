@@ -96,6 +96,7 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
             Text('Restroom Name'),
             TextField(
               controller: _nameController,
+              maxLength: 50,
               decoration: InputDecoration(
                 hintText: 'Restroom Name',
                 border: OutlineInputBorder(
@@ -157,6 +158,12 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
                             _centerLng = position.center.longitude;
                           });
                         },
+                        interactionOptions: const InteractionOptions(
+                          flags:
+                              InteractiveFlag.drag |
+                              InteractiveFlag.pinchZoom |
+                              InteractiveFlag.doubleTapZoom,
+                        ),
                       ),
                       children: [
                         TileLayer(

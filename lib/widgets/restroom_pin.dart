@@ -4,8 +4,7 @@ import 'package:rate_my_bowl/models/restroom.dart';
 
 class RestroomPin extends StatelessWidget {
   final Gender restroomGender;
-  final bool
-  isSelected; // not doing anything with this yet, but I added it in just in case we want to change the icon when selected or something
+  final bool isSelected;
   final VoidCallback? onTap;
 
   const RestroomPin({
@@ -19,7 +18,7 @@ class RestroomPin extends StatelessWidget {
     return switch (restroomGender) {
       Gender.male => 'assets/toilet_pin_m.svg',
       Gender.female => 'assets/toilet_pin_f.svg',
-      Gender.unisex => 'assets/toilet_pin_u.svg'
+      Gender.unisex => 'assets/toilet_pin_u.svg',
     };
   }
 
@@ -34,7 +33,12 @@ class RestroomPin extends StatelessWidget {
       child: SizedBox(
         width: pinWidth,
         height: pinHeight,
-        child: SvgPicture.asset(_getSvgAssetPath(), fit: BoxFit.contain),
+        child: AnimatedScale(
+          scale: isSelected ? 1.25 : 1.0,
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutBack,
+          child: SvgPicture.asset(_getSvgAssetPath(), fit: BoxFit.contain),
+        ),
       ),
     );
   }

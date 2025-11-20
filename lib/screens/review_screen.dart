@@ -47,7 +47,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
   int get _currentSheetIndex => _rating.round().clamp(1, maxSheets);
   Future<void> _submitReview() async {
     final note = _controller.text.trim();
-    
+
     if (note.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -163,6 +163,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   controller: _controller,
                   minLines: 4,
                   maxLines: 8,
+                  maxLength: 400,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.0),
