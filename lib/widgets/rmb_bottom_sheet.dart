@@ -74,6 +74,17 @@ class _RmbBottomSheetState extends State<RmbBottomSheet> {
     };
   }
 
+  IconData _genderIcon(Gender gender) {
+    switch (gender) {
+      case Gender.male:
+        return Icons.man;
+      case Gender.female:
+        return Icons.woman;
+      default:
+        return Icons.wc;
+    }
+  }
+
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
@@ -145,7 +156,12 @@ class _RmbBottomSheetState extends State<RmbBottomSheet> {
                     ),
                     Row(
                       children: [
-                        const Icon(Icons.wc, color: Colors.white, size: 20),
+                        Icon(
+                          _genderIcon(widget.restroom!.gender),
+                          color: Colors.white,
+                          size: 20,
+                        ),
+
                         const SizedBox(width: 4),
                         Text(
                           _getGenderDisplayName(widget.restroom!.gender),

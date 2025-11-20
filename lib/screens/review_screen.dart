@@ -5,6 +5,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/review_service.dart';
 import '../models/review.dart';
 
+final List<String> _hints = [
+  "It smelled like...",
+  "Were the stall doors low enough?",
+  "Ran out of toilet paper?",
+  "It reminded me of...",
+  "Feeling refreshed?",
+];
+
+late String _randomHint;
+
 class ReviewScreen extends StatefulWidget {
   final TextEditingController? controller;
   final String restroomName;
@@ -34,6 +44,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
     super.initState();
     _controller = widget.controller ?? TextEditingController();
     _ownsController = widget.controller == null;
+
+    _randomHint = (_hints..shuffle()).first;
   }
 
   @override
@@ -169,7 +181,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: CustomInputField(
-                  hintText: "It smelled like...",
+                  hintText: _randomHint,
                   controller: _controller,
                   minLines: 4,
                   maxLines: 8,
