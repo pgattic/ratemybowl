@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/restroom.dart';
 import '../models/review.dart';
 import '../services/review_service.dart';
@@ -71,6 +73,18 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
       return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
     } else {
       return '${date.month}/${date.day}/${date.year}';
+    }
+  }
+
+  Future<void> _launchGoogleMaps(double latitude, double longitude) async {
+    final Uri mapsUrl = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
+    );
+
+    if (await canLaunchUrl(mapsUrl)) {
+      await launchUrl(mapsUrl);
+    } else {
+      debugPrint('Could not launch $mapsUrl');
     }
   }
 
@@ -147,31 +161,44 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                   ),
                 ),
 
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: widget.screenBuilder),
-                    );
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: widget.screenBuilder),
+                        );
 
-                    if (result != null) {
-                      setState(() {
-                        display = result is Map
-                            ? Map<String, Object>.from(result)
-                            : {'result': result.toString()};
-                      });
+                        if (result != null) {
+                          setState(() {
+                            display = result is Map
+                                ? Map<String, Object>.from(result)
+                                : {'result': result.toString()};
+                          });
 
-                      if (result is Map && result['success'] == true) {
-                        _loadReviews();
-                      }
+                          if (result is Map && result['success'] == true) {
+                            _loadReviews();
+                          }
 
-                      Navigator.of(context).pop(result);
-                    }
-                  },
-                  child: const Text('Add review'),
-                ),
+                          Navigator.of(context).pop(result);
+                        }
+                      },
+                      child: const Text('Add review'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final LatLng loc = restroom.coordinates;
+                        _launchGoogleMaps(loc.latitude, loc.longitude);
+                      },
+                      child: const Text('Navigate'),
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 16),
