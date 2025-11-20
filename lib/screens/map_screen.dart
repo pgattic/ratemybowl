@@ -138,7 +138,10 @@ class _MapScreenState extends State<MapScreen> {
 
     // Skip fetches if user hasn't moved much and zoom hasn't changed.
     if (!force && _lastFetchedCenter != null) {
-      final distance = _approximateDistanceInMeters(center, _lastFetchedCenter!);
+      final distance = _approximateDistanceInMeters(
+        center,
+        _lastFetchedCenter!,
+      );
       if (distance < _minFetchDistance) {
         return;
       }
@@ -228,7 +231,7 @@ class _MapScreenState extends State<MapScreen> {
         children: [
           TileLayer(
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: 'com.example.rate_my_bowl',
+            userAgentPackageName: 'com.tinklethinkers.rate_my_bowl',
           ),
           MarkerLayer(
             markers: _restrooms.map((restroom) {
@@ -260,7 +263,8 @@ class _MapScreenState extends State<MapScreen> {
                     ).then((result) async {
                       if (!mounted) return;
 
-                      final success = result is Map && result['success'] == true;
+                      final success =
+                          result is Map && result['success'] == true;
                       if (!success) return;
 
                       final currentCenter = _mapController.camera.center;

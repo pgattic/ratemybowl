@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:rate_my_bowl/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/screens/map_screen.dart';
 import 'package:rate_my_bowl/screens/list_screen.dart';
 import 'package:rate_my_bowl/screens/settings_screen.dart';
 import 'package:rate_my_bowl/screens/debug_screen.dart';
+import 'package:rate_my_bowl/widgets/bowl_logo.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,31 +32,10 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Text(
-              style: GoogleFonts.quicksand(
-                fontSize: 24.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-              "rate my "
-            ),
-            SvgPicture.asset(
-              width: 12.0,
-              height: 24.0,
-              "assets/toilet.svg"
-            ),
-            Text(
-              style: GoogleFonts.quicksand(
-                fontSize: 24.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-              "owl"
-            ),
-          ],
+        title: const RateMyBowlLogo(
+          color: Colors.white,
+          size: 0.7,
+          alignment: MainAxisAlignment.start,
         ),
         actions: [
           IconButton(
@@ -81,25 +59,15 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'Map',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu),
-            label: 'List',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
+          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'List'),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Settings',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bug_report),
-            label: 'Debug',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.bug_report), label: 'Debug'),
         ],
       ),
     );
   }
 }
-

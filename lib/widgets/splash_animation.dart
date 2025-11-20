@@ -167,7 +167,7 @@ class _SplashAnimationState extends State<SplashAnimation>
       return Container(
         color: Colors.white,
         child: const Center(
-          child: RateMyBowlLogo(textColor: Colors.lightBlueAccent),
+          child: RateMyBowlLogo(color: Colors.lightBlueAccent),
         ),
       );
     }
@@ -188,7 +188,7 @@ class _SplashAnimationState extends State<SplashAnimation>
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: 800),
             opacity: (waterLevel < widget.height / 2) ? 1.0 : 0.0,
-            child: const RateMyBowlLogo(textColor: Colors.lightBlueAccent),
+            child: const RateMyBowlLogo(color: Colors.lightBlueAccent),
           ),
         ),
       ],

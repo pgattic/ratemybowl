@@ -1,4 +1,4 @@
-package com.example.rate_my_bowl
+package com.tinklethinkers.rate_my_bowl
 
 import io.flutter.embedding.android.FlutterActivity
 

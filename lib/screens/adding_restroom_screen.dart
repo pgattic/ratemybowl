@@ -162,7 +162,8 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
                         TileLayer(
                           urlTemplate:
                               'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                          userAgentPackageName: 'com.example.rate_my_bowl',
+                          userAgentPackageName:
+                              'com.tinklethinkers.rate_my_bowl',
                         ),
                       ],
                     ),
