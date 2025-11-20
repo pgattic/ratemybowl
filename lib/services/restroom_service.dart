@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:rate_my_bowl/models/restroom.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -93,7 +94,7 @@ class RestroomService {
 
       return restrooms;
     } catch (e) {
-      print('Error fetching restroom locations: $e');
+      debugPrint('Error fetching restroom locations: $e');
       return [];
     }
   }
@@ -107,7 +108,7 @@ class RestroomService {
           .single();
       return Restroom.fromJson(response);
     } catch (e) {
-      print('Error fetching restroom by id: $e');
+      debugPrint('Error fetching restroom by id: $e');
       return null;
     }
   }
@@ -115,9 +116,6 @@ class RestroomService {
   Future<Restroom> addRestroom(Restroom restroom) async {
     try {
       final data = restroom.toJson();
-      // We don't want to set the restroom_id - let the database generate it automatically for us, otherwise we'll get an error
-      data.remove('restroom_id');
-      
       final response = await Supabase.instance.client
           .from('restroom')
           .insert(data)
@@ -135,7 +133,7 @@ class RestroomService {
         attributes: [],
       );
     } catch (e) {
-      print('Error adding restroom: $e');
+      debugPrint('Error adding restroom: $e');
       rethrow;
     }
   }

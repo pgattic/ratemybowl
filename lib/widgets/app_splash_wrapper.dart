@@ -18,11 +18,7 @@ class _AppSplashWrapperState extends State<AppSplashWrapper> {
   Widget build(BuildContext context) {
       return Consumer<AuthService>(
         builder: (context, authService, child) {
-          if (authService.isAuthenticated) {
-            return const AuthWrapper();
-          }
-
-          if (_showSplash) {
+          if (!authService.isAuthenticated && _showSplash) {
             return SplashScreen(
               onAnimationComplete: () {
                 setState(() {

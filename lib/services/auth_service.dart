@@ -30,11 +30,10 @@ class AuthService extends ChangeNotifier {
         password: password,
       );
 
-      print(response);
       // The auth state listener will automatically update _isAuthenticated and _email
       return response.user != null;
     } catch (e) {
-      print('Login error: $e');
+      debugPrint('Login error: $e');
       return false;
     }
   }
@@ -76,7 +75,7 @@ class AuthService extends ChangeNotifier {
       }
       return false;
     } catch (e) {
-      print('Signup error: $e');
+      debugPrint('Signup error: $e');
       return false;
     }
   }

@@ -59,7 +59,7 @@ class _ReviewBottomSheetState extends State<RmbBottomSheet> {
         });
       }
     } catch (e) {
-      print('Error loading reviews: $e');
+      debugPrint('Error loading reviews: $e');
       if (mounted) {
         setState(() {
           _isLoadingReviews = false;
