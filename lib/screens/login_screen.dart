@@ -96,7 +96,6 @@ class _LoginScreenState extends State<LoginScreen>
       backgroundColor: Colors.lightBlueAccent,
       body: Stack(
         children: [
-          // Centered content stays exactly where it was
           Center(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -174,7 +173,6 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
 
-          // Copyright pinned to bottom without affecting anything
           Positioned(
             bottom: 16,
             left: 0,

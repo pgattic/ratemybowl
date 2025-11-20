@@ -153,6 +153,12 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
                             _centerLng = position.center.longitude;
                           });
                         },
+                        interactionOptions: const InteractionOptions(
+                          flags:
+                              InteractiveFlag.drag |
+                              InteractiveFlag.pinchZoom |
+                              InteractiveFlag.doubleTapZoom,
+                        ),
                       ),
                       children: [
                         TileLayer(

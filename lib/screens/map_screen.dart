@@ -8,9 +8,10 @@ import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/controllers/location_controller.dart';
 import 'package:rate_my_bowl/screens/adding_restroom_screen.dart';
 import 'package:rate_my_bowl/screens/review_screen.dart';
-import 'package:rate_my_bowl/widgets/rmb_bottom_sheet.dart';
+import 'package:rate_my_bowl/widgets/add_restroom_bottom_sheet.dart';
 import 'package:rate_my_bowl/services/restroom_service.dart';
 import 'package:rate_my_bowl/models/restroom.dart';
+import 'package:rate_my_bowl/widgets/selected_pin_bottom_sheet.dart';
 import '../widgets/restroom_pin.dart';
 
 class MapScreen extends StatefulWidget {
@@ -68,13 +69,8 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void dispose() {
     _debounceTimer?.cancel();
-    // DO NOT dispose the LocationController here; Provider owns it.
     super.dispose();
   }
-
-  // ==========================
-  // Fetching logic
-  // ==========================
 
   double _calculateRadiusFromZoom(double zoom) {
     // Rough heuristic: larger radius at low zoom.
@@ -183,13 +179,11 @@ class _MapScreenState extends State<MapScreen> {
     _mapController.move(pos, zoom);
   }
 
-  // ==========================
-  // Build
-  // ==========================
-
   @override
   Widget build(BuildContext context) {
-    final userLocation = _locationController.userLatLong;
+    final userLocation = context.select<LocationController, LatLng?>(
+      (lc) => lc.userLatLong,
+    );
     final initialCenter = userLocation ?? _defaultCenter;
 
     return Scaffold(
@@ -214,8 +208,7 @@ class _MapScreenState extends State<MapScreen> {
             final result = await showModalBottomSheet<Restroom>(
               context: context,
               barrierColor: Colors.black38,
-              builder: (_) => RmbBottomSheet(
-                addType: BottomSheetType.restroom,
+              builder: (_) => AddRestroomBottomSheet(
                 screenBuilder: (context) =>
                     AddingRestroomScreen(initCrossPos: latLng),
               ),
@@ -249,43 +242,51 @@ class _MapScreenState extends State<MapScreen> {
                       _selectedRestroom = restroom;
                     });
 
+                    _centerOn(restroom.coordinates);
+
                     showModalBottomSheet(
-                      context: context,
-                      barrierColor: Colors.black38,
-                      builder: (_) => RmbBottomSheet(
-                        addType: BottomSheetType.review,
-                        restroom: restroom,
-                        screenBuilder: (context) => ReviewScreen(
-                          restroomName: restroom.name,
-                          restroomId: restroom.id,
-                        ),
-                      ),
-                    ).then((result) async {
-                      if (!mounted) return;
+                          context: context,
+                          barrierColor: Colors.black38,
+                          builder: (_) => SelectedPinBottomSheet(
+                            restroom: restroom,
+                            screenBuilder: (context) => ReviewScreen(
+                              restroomName: restroom.name,
+                              restroomId: restroom.id,
+                            ),
+                          ),
+                        )
+                        .then((result) async {
+                          if (!mounted) return;
 
-                      final success =
-                          result is Map && result['success'] == true;
-                      if (!success) return;
+                          final success =
+                              result is Map && result['success'] == true;
+                          if (!success) return;
 
-                      final currentCenter = _mapController.camera.center;
-                      await _fetchRestrooms(
-                        currentCenter,
-                        zoom: _currentZoom,
-                        force: true,
-                      );
+                          final currentCenter = _mapController.camera.center;
+                          await _fetchRestrooms(
+                            currentCenter,
+                            zoom: _currentZoom,
+                            force: true,
+                          );
 
-                      if (!mounted) return;
+                          if (!mounted) return;
 
-                      if (_selectedRestroom != null) {
-                        final updated = _restrooms.firstWhere(
-                          (r) => r.id == _selectedRestroom!.id,
-                          orElse: () => _selectedRestroom!,
-                        );
-                        setState(() {
-                          _selectedRestroom = updated;
+                          if (_selectedRestroom != null) {
+                            final updated = _restrooms.firstWhere(
+                              (r) => r.id == _selectedRestroom!.id,
+                              orElse: () => _selectedRestroom!,
+                            );
+                            setState(() {
+                              _selectedRestroom = updated;
+                            });
+                          }
+                        })
+                        .whenComplete(() {
+                          if (!mounted) return;
+                          setState(() {
+                            _selectedRestroom = null;
+                          });
                         });
-                      }
-                    });
                   },
                 ),
               );
@@ -309,18 +310,17 @@ class _MapScreenState extends State<MapScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Recenter on user
-          FloatingActionButton(
-            heroTag: "recenter",
-            onPressed: () {
-              final pos = _locationController.userLatLong;
-              if (pos != null) {
-                _centerOn(pos, zoom: _defaultZoom);
-                _fetchRestrooms(pos, zoom: _defaultZoom, force: true);
-              }
-            },
-            child: const Icon(Icons.my_location),
-          ),
-          const SizedBox(height: 12),
+          if (userLocation != null) ...[
+            FloatingActionButton(
+              heroTag: "recenter",
+              onPressed: () {
+                _centerOn(userLocation, zoom: _defaultZoom);
+                _fetchRestrooms(userLocation, zoom: _defaultZoom, force: true);
+              },
+              child: const Icon(Icons.my_location),
+            ),
+            const SizedBox(height: 12),
+          ],
 
           // Add restroom at current map center
           FloatingActionButton(
@@ -330,8 +330,7 @@ class _MapScreenState extends State<MapScreen> {
               final result = await showModalBottomSheet<Restroom>(
                 context: context,
                 barrierColor: Colors.black38,
-                builder: (_) => RmbBottomSheet(
-                  addType: BottomSheetType.restroom,
+                builder: (_) => AddRestroomBottomSheet(
                   screenBuilder: (context) =>
                       AddingRestroomScreen(initCrossPos: center),
                 ),
@@ -350,10 +349,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 }
-
-// ==========================
-// User location layer
-// ==========================
 
 class _UserLocationLayer extends StatefulWidget {
   final void Function(LatLng pos)? onFirstFix;
