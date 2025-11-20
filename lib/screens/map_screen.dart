@@ -8,9 +8,10 @@ import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/controllers/location_controller.dart';
 import 'package:rate_my_bowl/screens/adding_restroom_screen.dart';
 import 'package:rate_my_bowl/screens/review_screen.dart';
-import 'package:rate_my_bowl/widgets/rmb_bottom_sheet.dart';
+import 'package:rate_my_bowl/widgets/add_restroom_bottom_sheet.dart';
 import 'package:rate_my_bowl/services/restroom_service.dart';
 import 'package:rate_my_bowl/models/restroom.dart';
+import 'package:rate_my_bowl/widgets/selected_pin_bottom_sheet.dart';
 import '../widgets/restroom_pin.dart';
 
 class MapScreen extends StatefulWidget {
@@ -207,8 +208,7 @@ class _MapScreenState extends State<MapScreen> {
             final result = await showModalBottomSheet<Restroom>(
               context: context,
               barrierColor: Colors.black38,
-              builder: (_) => RmbBottomSheet(
-                addType: BottomSheetType.restroom,
+              builder: (_) => AddRestroomBottomSheet(
                 screenBuilder: (context) =>
                     AddingRestroomScreen(initCrossPos: latLng),
               ),
@@ -245,8 +245,7 @@ class _MapScreenState extends State<MapScreen> {
                     showModalBottomSheet(
                       context: context,
                       barrierColor: Colors.black38,
-                      builder: (_) => RmbBottomSheet(
-                        addType: BottomSheetType.review,
+                      builder: (_) => SelectedPinBottomSheet(
                         restroom: restroom,
                         screenBuilder: (context) => ReviewScreen(
                           restroomName: restroom.name,
@@ -322,8 +321,7 @@ class _MapScreenState extends State<MapScreen> {
               final result = await showModalBottomSheet<Restroom>(
                 context: context,
                 barrierColor: Colors.black38,
-                builder: (_) => RmbBottomSheet(
-                  addType: BottomSheetType.restroom,
+                builder: (_) => AddRestroomBottomSheet(
                   screenBuilder: (context) =>
                       AddingRestroomScreen(initCrossPos: center),
                 ),
