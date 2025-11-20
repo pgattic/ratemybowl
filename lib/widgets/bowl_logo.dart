@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 class RateMyBowlLogo extends StatelessWidget {
-  final Color? color; // optional color
+  final Color? color;
   final double size;
   final MainAxisAlignment alignment;
 
@@ -22,14 +22,20 @@ class RateMyBowlLogo extends StatelessWidget {
     return Row(
       mainAxisAlignment: alignment,
       children: [
-        Text("rate my ", style: TextStyle(fontSize: fontSize * size)),
+        Text(
+          "rate my ",
+          style: TextStyle(fontSize: fontSize * size, color: useColor),
+        ),
         SvgPicture.asset(
           "assets/toilet.svg",
           width: iconSize * size,
           height: iconSize * size,
           colorFilter: ColorFilter.mode(useColor, BlendMode.srcIn),
         ),
-        Text("owl", style: TextStyle(fontSize: fontSize * size)),
+        Text(
+          "owl",
+          style: TextStyle(fontSize: fontSize * size, color: useColor),
+        ),
       ],
     );
   }

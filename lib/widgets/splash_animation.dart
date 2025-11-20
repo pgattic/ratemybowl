@@ -122,7 +122,7 @@ class _SplashAnimationState extends State<SplashAnimation>
 
   Future<void> _taperSound() async {
     if (!mounted) return; // Make sure widget still exists
-    if (_audio.state == PlayerState.disposed) return; // Player disposed already
+    if (_audio.state == PlayerState.disposed) return;
 
     const fadeDuration = Duration(milliseconds: 2000);
     const steps = 10;
@@ -165,7 +165,7 @@ class _SplashAnimationState extends State<SplashAnimation>
     // Show loading until audio/logo ready
     if (!_isReadyToAnimate) {
       return Container(
-        color: Colors.white,
+        //color: Colors.white,
         child: const Center(
           child: RateMyBowlLogo(color: Colors.lightBlueAccent),
         ),
