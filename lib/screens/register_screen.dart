@@ -66,9 +66,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       final authService = context.read<AuthService>();
       final success = await authService.register(
-        _emailController.text,
-        _usernameController.text,
-        _passwordController.text,
+        _emailController.text.trim(),
+        _usernameController.text.trim(),
+        _passwordController.text.trim(),
       );
 
       if (!success) {
