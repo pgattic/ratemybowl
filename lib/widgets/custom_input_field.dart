@@ -7,6 +7,7 @@ class CustomInputField extends StatelessWidget {
   final int minLines;
   final int maxLines;
   final double borderRadius;
+  final int? maxLength;
 
   const CustomInputField({
     super.key,
@@ -16,6 +17,7 @@ class CustomInputField extends StatelessWidget {
     this.minLines = 1,
     this.maxLines = 1,
     this.borderRadius = 50.0,
+    this.maxLength,
   });
 
   @override
@@ -26,6 +28,7 @@ class CustomInputField extends StatelessWidget {
       obscureText: obscureText,
       minLines: minLines,
       maxLines: maxLines,
+      maxLength: maxLength,
       style: TextStyle(color: const Color.fromARGB(255, 64, 64, 64)),
       decoration: InputDecoration(
         border: OutlineInputBorder(

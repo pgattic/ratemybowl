@@ -186,6 +186,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   minLines: 4,
                   maxLines: 8,
                   borderRadius: 16,
+                  maxLength: 400,
                 ),
               ),
 

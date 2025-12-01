@@ -99,6 +99,7 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
               hintText: "Restroom name",
               controller: _nameController,
               borderRadius: 16.0,
+              maxLength: 50,
             ),
             Text('Gender'),
             Container(

@@ -24,17 +24,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _updatePasswordValidity() {
     setState(() {
-  final pw = _passwordController.text.trim();
-  final hasUpper = pw.contains(RegExp(r'[A-Z]'));
-  final hasLower = pw.contains(RegExp(r'[a-z]'));
-  _isPasswordValid = pw.length >= 8 && hasUpper && hasLower;
+      final pw = _passwordController.text.trim();
+      final hasUpper = pw.contains(RegExp(r'[A-Z]'));
+      final hasLower = pw.contains(RegExp(r'[a-z]'));
+      _isPasswordValid = pw.length >= 8 && hasUpper && hasLower;
     });
   }
 
   void _updateEmailValidity() {
     setState(() {
-  final email = _emailController.text.trim();
-  _isEmailValid = _emailRegex.hasMatch(email);
+      final email = _emailController.text.trim();
+      _isEmailValid = _emailRegex.hasMatch(email);
     });
   }
 
@@ -43,7 +43,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _isUsernameValid = _usernameController.text.trim().isNotEmpty;
     });
   }
-
 
   Future<void> _handleRegister() async {
     if (_emailController.text.isEmpty ||
@@ -96,21 +95,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-  _emailController.removeListener(_updateEmailValidity);
-  _emailController.dispose();
+    _emailController.removeListener(_updateEmailValidity);
+    _emailController.dispose();
     _usernameController.dispose();
     _passwordController.removeListener(_updatePasswordValidity);
-  _passwordController.dispose();
-  _usernameController.removeListener(_updateUsernameValidity);
+    _passwordController.dispose();
+    _usernameController.removeListener(_updateUsernameValidity);
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-  _emailController.addListener(_updateEmailValidity);
+    _emailController.addListener(_updateEmailValidity);
     _passwordController.addListener(_updatePasswordValidity);
-  _usernameController.addListener(_updateUsernameValidity);
+    _usernameController.addListener(_updateUsernameValidity);
   }
 
   @override
@@ -143,6 +142,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ],
               ),
               CustomInputField(hintText: "email", controller: _emailController),
+              if (!_isEmailValid && _emailController.text.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+                  child: Text(
+                    'Please enter a valid email address!',
+                    style: TextStyle(
+                      color: const Color.fromARGB(255, 235, 4, 4),
+                      fontSize: 12.0,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
               CustomInputField(
                 hintText: "username",
                 controller: _usernameController,
@@ -158,7 +170,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
                   child: Text(
                     'Password must be at least 8 characters and include both upper and lower case letters.',
-                    style: GoogleFonts.quicksand(
+                    style: TextStyle(
                       color: const Color.fromARGB(255, 235, 4, 4),
                       fontSize: 12.0,
                     ),
@@ -166,7 +178,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ElevatedButton(
-                onPressed: (_isLoading || !_isPasswordValid || !_isEmailValid || !_isUsernameValid)
+                onPressed:
+                    (_isLoading ||
+                        !_isPasswordValid ||
+                        !_isEmailValid ||
+                        !_isUsernameValid)
                     ? null
                     : _handleRegister,
                 child: _isLoading
