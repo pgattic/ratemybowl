@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:rate_my_bowl/widgets/account_input_field.dart';
+import 'package:rate_my_bowl/widgets/custom_input_field.dart';
 import 'package:rate_my_bowl/screens/forgot_password_screen.dart';
 import 'package:rate_my_bowl/screens/register_screen.dart';
 import 'package:rate_my_bowl/services/auth_service.dart';
@@ -110,12 +109,12 @@ class _LoginScreenState extends State<LoginScreen>
                     opacity: _fadeInAnimation,
                     child: Column(
                       children: [
-                        AccountInputField(
+                        CustomInputField(
                           hintText: "email",
                           controller: _emailController,
                         ),
                         const SizedBox(height: 16),
-                        AccountInputField(
+                        CustomInputField(
                           hintText: "password",
                           obscureText: true,
                           controller: _passwordController,
@@ -150,13 +149,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   ),
                                 );
                               },
-                              child: Text(
-                                "create an account",
-                                style: GoogleFonts.quicksand(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
+                              child: Text("create an account"),
                             ),
                             TextButton(
                               onPressed: () {
@@ -168,13 +161,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   ),
                                 );
                               },
-                              child: Text(
-                                "forgot my password",
-                                style: GoogleFonts.quicksand(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
+                              child: Text("forgot my password"),
                             ),
                           ],
                         ),
