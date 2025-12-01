@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/restroom.dart';
 import '../models/review.dart';
@@ -60,6 +59,17 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
     };
   }
 
+  IconData _genderIcon(Gender gender) {
+    switch (gender) {
+      case Gender.male:
+        return Icons.man;
+      case Gender.female:
+        return Icons.woman;
+      default:
+        return Icons.wc;
+    }
+  }
+
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
@@ -92,148 +102,148 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
   Widget build(BuildContext context) {
     final restroom = widget.restroom;
 
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.7,
-      ),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                restroom.name,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        restroom.rating > 0
-                            ? restroom.rating.toStringAsFixed(1)
-                            : 'No ratings',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      const Icon(Icons.reviews, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${restroom.reviewCount} ${restroom.reviewCount == 1 ? 'review' : 'reviews'}',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      const Icon(Icons.wc, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        _getGenderDisplayName(restroom.gender),
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              const Divider(height: 32),
-
-              if (display != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: Text(
-                    'review: $display',
-                    style: const TextStyle(fontSize: 16),
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Color.fromRGBO(64, 196, 255, 1),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  restroom.name,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+                const SizedBox(height: 12),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: widget.screenBuilder),
-                        );
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 20),
+                        const SizedBox(width: 4),
+                        Text(
+                          restroom.rating > 0
+                              ? restroom.rating.toStringAsFixed(1)
+                              : 'No ratings',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.reviews,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${restroom.reviewCount} ${restroom.reviewCount == 1 ? 'review' : 'reviews'}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Icon(
+                          _genderIcon(widget.restroom.gender),
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _getGenderDisplayName(restroom.gender),
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
 
-                        if (result != null) {
-                          setState(() {
-                            display = result is Map
-                                ? Map<String, Object>.from(result)
-                                : {'result': result.toString()};
-                          });
+                const Divider(
+                  color: Color.fromARGB(255, 40, 125, 165),
+                  height: 32,
+                ),
 
-                          if (result is Map && result['success'] == true) {
-                            _loadReviews();
+                if (display != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Text(
+                      'review: $display',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: widget.screenBuilder),
+                          );
+
+                          if (result != null) {
+                            setState(() {
+                              display = result is Map
+                                  ? Map<String, Object>.from(result)
+                                  : {'result': result.toString()};
+                            });
+
+                            if (result is Map && result['success'] == true) {
+                              _loadReviews();
+                            }
+
+                            Navigator.of(context).pop(result);
                           }
-
-                          Navigator.of(context).pop(result);
-                        }
-                      },
-                      child: const Text('Add review'),
+                        },
+                        child: const Text('Add review'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final LatLng loc = restroom.coordinates;
-                        _launchGoogleMaps(loc.latitude, loc.longitude);
-                      },
-                      child: const Text('Navigate'),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final loc = restroom.coordinates;
+                          _launchGoogleMaps(loc.latitude, loc.longitude);
+                        },
+                        child: const Text('Navigate'),
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
 
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 8),
+                const SizedBox(height: 16),
+                const Divider(
+                  color: Color.fromARGB(255, 40, 125, 165),
+                  height: 0,
+                ),
+                const SizedBox(height: 8),
 
-              const Text(
-                'Reviews',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+                const Text(
+                  'Reviews',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
 
-              const SizedBox(height: 8),
+                const SizedBox(height: 8),
 
-              if (_isLoadingReviews)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: CircularProgressIndicator(),
-                  ),
-                )
-              else if (_reviews.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'No reviews yet. Be the first to review!',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                )
-              else
-                ..._reviews.map((review) {
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8.0),
+                if (_isLoadingReviews)
+                  const Center(
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Column(
@@ -281,21 +291,13 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                                 ],
                               ),
                             ],
-                          ),
-                          if (review.notes != null &&
-                              review.notes!.isNotEmpty) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              review.notes!,
-                              style: const TextStyle(fontSize: 14),
-                            ),
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                  );
-                }),
-            ],
+                    );
+                  }),
+              ],
+            ),
           ),
         ),
       ),

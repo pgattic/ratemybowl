@@ -21,7 +21,14 @@ class _DebugScreenState extends State<DebugScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Debug page here', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.grey)),
+            const Text(
+              'Debug page here',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
             const SizedBox(height: 20),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -30,11 +37,19 @@ class _DebugScreenState extends State<DebugScreen> {
                   onPressed: () async {
                     final result = await Navigator.push<Map<String, double>>(
                       context,
-                      MaterialPageRoute(builder: (_) => const AddingRestroomScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const AddingRestroomScreen(),
+                      ),
                     );
-                    if (result != null && result['latitude'] != null && result['longitude'] != null) {
+                    if (result != null &&
+                        result['latitude'] != null &&
+                        result['longitude'] != null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Restroom added at Lat: ${result['latitude']}, Lng: ${result['longitude']}')),
+                        SnackBar(
+                          content: Text(
+                            'Restroom added at Lat: ${result['latitude']}, Lng: ${result['longitude']}',
+                          ),
+                        ),
                       );
                     }
                   },
@@ -45,9 +60,14 @@ class _DebugScreenState extends State<DebugScreen> {
                   onPressed: () async {
                     final result = await Navigator.push<Map<String, dynamic>>(
                       context,
-                      MaterialPageRoute(builder: (_) => const ReviewScreen(restroomName: 'Sample Restroom')),
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const ReviewScreen(restroomName: 'Sample Restroom'),
+                      ),
                     );
-                    if (result != null && result['text'] != null && (result['text'] as String).isNotEmpty) {
+                    if (result != null &&
+                        result['text'] != null &&
+                        (result['text'] as String).isNotEmpty) {
                       setState(() {
                         _lastReviewText = result['text'] as String;
                         _lastRating = (result['rating'] as num).toDouble();
@@ -57,15 +77,24 @@ class _DebugScreenState extends State<DebugScreen> {
                       );
                     }
                   },
-                  child: const Text('Review'),
+                  child: const Text(
+                    'Review',
+                    style: TextStyle(color: Color.fromARGB(255, 25, 109, 177)),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             if (_lastReviewText != null) ...[
-              Text('Last review: $_lastReviewText', style: const TextStyle(color: Colors.black87)),
+              Text(
+                'Last review: $_lastReviewText',
+                style: const TextStyle(color: Colors.black87),
+              ),
               const SizedBox(height: 8),
-              Text('Rating: ${_lastRating?.toStringAsFixed(1) ?? '-'}', style: const TextStyle(color: Colors.black54)),
+              Text(
+                'Rating: ${_lastRating?.toStringAsFixed(1) ?? '-'}',
+                style: const TextStyle(color: Colors.black54),
+              ),
             ],
           ],
         ),

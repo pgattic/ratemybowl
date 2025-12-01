@@ -1,39 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/svg.dart';
 
 class RateMyBowlLogo extends StatelessWidget {
-  final Color? textColor; // optional color
+  final Color? color;
+  final double size;
+  final MainAxisAlignment alignment;
 
-  const RateMyBowlLogo({super.key, this.textColor});
+  const RateMyBowlLogo({
+    super.key,
+    this.color,
+    this.size = 1.0,
+    this.alignment = MainAxisAlignment.center,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final color = textColor ?? Colors.white; // default to white
+    final useColor = color ?? Colors.white; // default to white
+    final fontSize = 36.0;
+    final iconSize = 30.0;
+
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: alignment,
       children: [
         Text(
           "rate my ",
-          style: GoogleFonts.quicksand(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+          style: TextStyle(fontSize: fontSize * size, color: useColor),
         ),
         SvgPicture.asset(
           "assets/toilet.svg",
-          width: 32,
-          height: 32,
-          colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+          width: iconSize * size,
+          height: iconSize * size,
+          colorFilter: ColorFilter.mode(useColor, BlendMode.srcIn),
         ),
         Text(
           "owl",
-          style: GoogleFonts.quicksand(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+          style: TextStyle(fontSize: fontSize * size, color: useColor),
         ),
       ],
     );

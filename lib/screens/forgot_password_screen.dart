@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:rate_my_bowl/widgets/account_input_field.dart';
+import 'package:rate_my_bowl/widgets/custom_input_field.dart';
 import 'package:rate_my_bowl/widgets/bowl_logo.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -57,14 +56,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    style: GoogleFonts.quicksand(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    "reset password",
-                  ),
+                  Text(style: TextStyle(fontSize: 24.0), "reset password"),
                 ],
               ),
               SizedBox(height: 4.0),
@@ -72,19 +64,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    style: GoogleFonts.quicksand(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                    style: TextStyle(fontSize: 18.0),
                     "enter email to reset your password",
                   ),
                 ],
               ),
-              AccountInputField(
-                hintText: "email",
-                controller: _emailController,
-              ),
+              CustomInputField(hintText: "email", controller: _emailController),
               ElevatedButton(
                 onPressed: _isLoading ? null : _handleForgotPassword,
                 child: _isLoading
