@@ -64,7 +64,7 @@ class AuthService extends ChangeNotifier {
       final response = await Supabase.instance.client.auth.signUp(
         email: email,
         password: password,
-        data: {'username': username},
+        data: {'display_name': username},
       );
 
       if (response.user != null) {

@@ -8,16 +8,17 @@ class ReviewService {
 
   Future<List<Review>> getReviewsByRestroomId(int restroomId) async {
     try {
-      final response = await Supabase.instance.client
-          .from('review')
-          .select('*')
-          .eq('restroom_id', restroomId)
-          .order('review_dt', ascending: false);
+      final response = await Supabase.instance.client.rpc(
+        'get_reviews_with_display_names',
+        params: {'p_restroom_id': restroomId},
+      );
 
       final List<Review> reviews = [];
 
-      for (var row in (response as List)) {
-        reviews.add(Review.fromJson(row));
+      if (response != null) {
+        for (var row in (response as List)) {
+          reviews.add(Review.fromJson(row));
+        }
       }
 
       return reviews;

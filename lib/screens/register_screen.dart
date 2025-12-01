@@ -16,6 +16,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isPasswordValid = false;
+  bool _isEmailValid = false;
+  bool _isUsernameValid = false;
+
+  final RegExp _emailRegex = RegExp(r"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+
+  void _updatePasswordValidity() {
+    setState(() {
+  final pw = _passwordController.text.trim();
+  final hasUpper = pw.contains(RegExp(r'[A-Z]'));
+  final hasLower = pw.contains(RegExp(r'[a-z]'));
+  _isPasswordValid = pw.length >= 8 && hasUpper && hasLower;
+    });
+  }
+
+  void _updateEmailValidity() {
+    setState(() {
+  final email = _emailController.text.trim();
+  _isEmailValid = _emailRegex.hasMatch(email);
+    });
+  }
+
+  void _updateUsernameValidity() {
+    setState(() {
+      _isUsernameValid = _usernameController.text.trim().isNotEmpty;
+    });
+  }
+
 
   Future<void> _handleRegister() async {
     if (_emailController.text.isEmpty ||
@@ -37,9 +65,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       final authService = context.read<AuthService>();
       final success = await authService.register(
-        _emailController.text,
-        _usernameController.text,
-        _passwordController.text,
+        _emailController.text.trim(),
+        _usernameController.text.trim(),
+        _passwordController.text.trim(),
       );
 
       if (!success) {
@@ -68,10 +96,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+  _emailController.removeListener(_updateEmailValidity);
+  _emailController.dispose();
     _usernameController.dispose();
-    _passwordController.dispose();
+    _passwordController.removeListener(_updatePasswordValidity);
+  _passwordController.dispose();
+  _usernameController.removeListener(_updateUsernameValidity);
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  _emailController.addListener(_updateEmailValidity);
+    _passwordController.addListener(_updatePasswordValidity);
+  _usernameController.addListener(_updateUsernameValidity);
   }
 
   @override
@@ -113,8 +152,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 obscureText: true,
                 controller: _passwordController,
               ),
+              // inline rule hint
+              if (!_isPasswordValid && _passwordController.text.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+                  child: Text(
+                    'Password must be at least 8 characters and include both upper and lower case letters.',
+                    style: GoogleFonts.quicksand(
+                      color: const Color.fromARGB(255, 235, 4, 4),
+                      fontSize: 12.0,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ElevatedButton(
-                onPressed: _isLoading ? null : _handleRegister,
+                onPressed: (_isLoading || !_isPasswordValid || !_isEmailValid || !_isUsernameValid)
+                    ? null
+                    : _handleRegister,
                 child: _isLoading
                     ? const SizedBox(
                         width: 20,

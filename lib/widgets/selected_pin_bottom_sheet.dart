@@ -245,60 +245,50 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                 if (_isLoadingReviews)
                   const Center(
                     child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-                else if (_reviews.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      'No reviews yet. Be the first to review!',
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 40, 125, 165),
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  )
-                else
-                  ..._reviews.map((review) {
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8.0),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                ...List.generate(5, (i) {
-                                  return Icon(
-                                    i < review.stars
-                                        ? Icons.star
-                                        : Icons.star_border,
-                                    color: Colors.amber,
-                                    size: 16,
-                                  );
-                                }),
-                                const SizedBox(width: 8),
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              if (review.displayName != null)
                                 Text(
-                                  _formatDate(review.reviewDt),
+                                  review.displayName!,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
+                              else
+                                Text(
+                                  'Anonymous',
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
                                     color: Colors.grey[600],
                                   ),
                                 ),
-                              ],
-                            ),
-                            if (review.notes != null &&
-                                review.notes!.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                review.notes!,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Color.fromARGB(255, 64, 64, 64),
-                                ),
+                              Row(
+                                children: [
+                                  ...List.generate(5, (i) {
+                                    return Icon(
+                                      i < review.stars
+                                          ? Icons.star
+                                          : Icons.star_border,
+                                      color: Colors.amber,
+                                      size: 16,
+                                    );
+                                  }),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _formatDate(review.reviewDt),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ],
