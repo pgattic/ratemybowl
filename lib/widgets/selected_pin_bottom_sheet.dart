@@ -270,23 +270,36 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                ...List.generate(5, (i) {
-                                  return Icon(
-                                    i < review.stars
-                                        ? Icons.star
-                                        : Icons.star_border,
-                                    color: Colors.amber,
-                                    size: 16,
-                                  );
-                                }),
-                                const SizedBox(width: 8),
                                 Text(
-                                  _formatDate(review.reviewDt),
+                                  review.displayName ?? 'Anonymous',
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
                                     color: Colors.grey[600],
                                   ),
+                                ),
+                                Row(
+                                  children: [
+                                    ...List.generate(5, (i) {
+                                      return Icon(
+                                        i < review.stars
+                                            ? Icons.star
+                                            : Icons.star_border,
+                                        color: Colors.amber,
+                                        size: 16,
+                                      );
+                                    }),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _formatDate(review.reviewDt),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
