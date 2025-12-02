@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:rate_my_bowl/services/auth_service.dart';
 import 'package:rate_my_bowl/widgets/custom_input_field.dart';
 import 'package:rate_my_bowl/widgets/toilet_paper.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/review_service.dart';
 import '../models/review.dart';
 
@@ -80,8 +81,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
       return;
     }
 
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) {
+    final authService = context.read<AuthService>();
+    final userId = authService.currentUserId;
+    if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error: You must be logged in to submit a review'),
@@ -98,7 +100,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     try {
       final review = Review(
         restroomId: widget.restroomId!,
-        userId: user.id,
+        userId: userId,
         stars: _rating.round(),
         reviewDt: DateTime.now(),
         notes: note.isEmpty ? null : note,
