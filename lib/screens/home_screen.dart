@@ -3,7 +3,7 @@ import 'package:rate_my_bowl/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/screens/map_screen.dart';
 import 'package:rate_my_bowl/screens/list_screen.dart';
-import 'package:rate_my_bowl/screens/settings_screen.dart';
+import 'package:rate_my_bowl/screens/options_screen.dart';
 import 'package:rate_my_bowl/screens/debug_screen.dart';
 import 'package:rate_my_bowl/widgets/bowl_logo.dart';
 
@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _pages = [
     const MapScreen(),
     const ListScreen(),
-    const SettingsScreen(),
+    const OptionsScreen(),
     const DebugScreen(),
   ];
 
@@ -37,14 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
           size: 0.7,
           alignment: MainAxisAlignment.start,
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              context.read<AuthService>().logout();
-            },
-            icon: const Icon(Icons.logout, color: Colors.white),
-          ),
-        ],
+  // no actions here; logout moved into Options screen
+  actions: [],
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -63,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'List'),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Settings',
+            label: 'Options',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.bug_report), label: 'Debug'),
         ],
