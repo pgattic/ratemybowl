@@ -273,7 +273,7 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  review.displayName ??'Anonymous',
+                                  review.displayName ?? 'Anonymous',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
