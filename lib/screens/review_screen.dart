@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:rate_my_bowl/services/auth_service.dart';
+import 'package:rate_my_bowl/widgets/custom_input_field.dart';
 import 'package:rate_my_bowl/widgets/toilet_paper.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/review_service.dart';
 import '../models/review.dart';
+
+final List<String> _hints = [
+  "It smelled like...",
+  "Were the stall doors low enough?",
+  "Ran out of toilet paper?",
+  "It reminded me of...",
+  "Feeling refreshed?",
+];
+
+late String _randomHint;
 
 class ReviewScreen extends StatefulWidget {
   final TextEditingController? controller;
@@ -24,7 +35,7 @@ class ReviewScreen extends StatefulWidget {
 class _ReviewScreenState extends State<ReviewScreen> {
   late final TextEditingController _controller;
   late final bool _ownsController;
-  double _rating = 3.0; // 1..5, slider snaps to integers
+  double _rating = 3.0;
 
   static const int maxSheets = 5;
   bool _isSubmitting = false;
@@ -34,6 +45,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
     super.initState();
     _controller = widget.controller ?? TextEditingController();
     _ownsController = widget.controller == null;
+
+    _randomHint = (_hints..shuffle()).first;
   }
 
   @override
@@ -68,8 +81,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
       return;
     }
 
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) {
+    final authService = context.read<AuthService>();
+    final userId = authService.currentUserId;
+    if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error: You must be logged in to submit a review'),
@@ -86,7 +100,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     try {
       final review = Review(
         restroomId: widget.restroomId!,
-        userId: user.id,
+        userId: userId,
         stars: _rating.round(),
         reviewDt: DateTime.now(),
         notes: note.isEmpty ? null : note,
@@ -143,39 +157,38 @@ class _ReviewScreenState extends State<ReviewScreen> {
               ),
 
               // Slider beneath the TP
-              Slider(
-                value: _rating,
-                min: 1.0,
-                max: maxSheets.toDouble(),
-                divisions: maxSheets - 1, // snaps to integers
-                label: _currentSheetIndex.toString(),
-                onChanged: (double value) {
-                  setState(() {
-                    _rating = value;
-                  });
-                },
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  valueIndicatorTextStyle: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                child: Slider(
+                  value: _rating,
+                  min: 1.0,
+                  max: maxSheets.toDouble(),
+                  divisions: maxSheets - 1,
+                  label: _currentSheetIndex.toString(),
+                  onChanged: (value) {
+                    setState(() {
+                      _rating = value;
+                    });
+                  },
+                ),
               ),
+
               const SizedBox(height: 8),
 
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: TextField(
+                child: CustomInputField(
+                  hintText: _randomHint,
                   controller: _controller,
                   minLines: 4,
                   maxLines: 8,
+                  borderRadius: 16,
                   maxLength: 400,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
-                    hintText: "It smelled like...",
-                    hintStyle: GoogleFonts.quicksand(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
                 ),
               ),
 

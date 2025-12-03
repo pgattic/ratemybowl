@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:rate_my_bowl/widgets/account_input_field.dart';
+import 'package:rate_my_bowl/widgets/custom_input_field.dart';
 import 'package:rate_my_bowl/services/auth_service.dart';
 import 'package:rate_my_bowl/widgets/bowl_logo.dart';
 
@@ -25,17 +24,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _updatePasswordValidity() {
     setState(() {
-  final pw = _passwordController.text.trim();
-  final hasUpper = pw.contains(RegExp(r'[A-Z]'));
-  final hasLower = pw.contains(RegExp(r'[a-z]'));
-  _isPasswordValid = pw.length >= 8 && hasUpper && hasLower;
+      final pw = _passwordController.text.trim();
+      final hasUpper = pw.contains(RegExp(r'[A-Z]'));
+      final hasLower = pw.contains(RegExp(r'[a-z]'));
+      _isPasswordValid = pw.length >= 8 && hasUpper && hasLower;
     });
   }
 
   void _updateEmailValidity() {
     setState(() {
-  final email = _emailController.text.trim();
-  _isEmailValid = _emailRegex.hasMatch(email);
+      final email = _emailController.text.trim();
+      _isEmailValid = _emailRegex.hasMatch(email);
     });
   }
 
@@ -44,7 +43,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _isUsernameValid = _usernameController.text.trim().isNotEmpty;
     });
   }
-
 
   Future<void> _handleRegister() async {
     if (_emailController.text.isEmpty ||
@@ -97,21 +95,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-  _emailController.removeListener(_updateEmailValidity);
-  _emailController.dispose();
+    _emailController.removeListener(_updateEmailValidity);
+    _emailController.dispose();
     _usernameController.dispose();
     _passwordController.removeListener(_updatePasswordValidity);
-  _passwordController.dispose();
-  _usernameController.removeListener(_updateUsernameValidity);
+    _passwordController.dispose();
+    _usernameController.removeListener(_updateUsernameValidity);
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-  _emailController.addListener(_updateEmailValidity);
+    _emailController.addListener(_updateEmailValidity);
     _passwordController.addListener(_updatePasswordValidity);
-  _usernameController.addListener(_updateUsernameValidity);
+    _usernameController.addListener(_updateUsernameValidity);
   }
 
   @override
@@ -140,43 +138,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    style: GoogleFonts.quicksand(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    "create an account",
-                  ),
+                  Text(style: TextStyle(fontSize: 24.0), "create an account"),
                 ],
               ),
-              // Email field + inline error
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AccountInputField(
-                    hintText: "email",
-                    controller: _emailController,
-                  ),
-                  if (!_isEmailValid && _emailController.text.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 12.0, top: 6.0),
-                      child: Text(
-                        'Please enter a valid email address.',
-                        style: GoogleFonts.quicksand(
-                          color: const Color.fromARGB(255, 235, 4, 4),
-                          fontSize: 12.0,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
+              CustomInputField(hintText: "email", controller: _emailController),
+              if (!_isEmailValid && _emailController.text.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+                  child: Text(
+                    'Please enter a valid email address!',
+                    style: TextStyle(
+                      color: const Color.fromARGB(255, 235, 4, 4),
+                      fontSize: 12.0,
                     ),
-                ],
-              ),
-              AccountInputField(
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
+              CustomInputField(
                 hintText: "username",
                 controller: _usernameController,
               ),
-              AccountInputField(
+              CustomInputField(
                 hintText: "password",
                 obscureText: true,
                 controller: _passwordController,
@@ -187,7 +170,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
                   child: Text(
                     'Password must be at least 8 characters and include both upper and lower case letters.',
-                    style: GoogleFonts.quicksand(
+                    style: TextStyle(
                       color: const Color.fromARGB(255, 235, 4, 4),
                       fontSize: 12.0,
                     ),
@@ -195,7 +178,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ElevatedButton(
-                onPressed: (_isLoading || !_isPasswordValid || !_isEmailValid || !_isUsernameValid)
+                onPressed:
+                    (_isLoading ||
+                        !_isPasswordValid ||
+                        !_isEmailValid ||
+                        !_isUsernameValid)
                     ? null
                     : _handleRegister,
                 child: _isLoading
