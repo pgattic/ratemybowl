@@ -164,16 +164,17 @@ class SupabaseBackend implements BackendAdapter {
   @override
   Future<List<Review>> getReviewsByRestroomId(int restroomId) async {
     _ensureInitialized();
-    final response = await _client
-        .from('review')
-        .select('*')
-        .eq('restroom_id', restroomId)
-        .order('review_dt', ascending: false);
+    final response = await _client.rpc(
+      'get_reviews_with_display_names',
+      params: {'p_restroom_id': restroomId},
+    );
 
     final List<Review> reviews = [];
 
-    for (final dynamic row in (response as List)) {
-      reviews.add(Review.fromJson(Map<String, dynamic>.from(row as Map)));
+    if (response != null) {
+      for (final dynamic row in (response as List)) {
+        reviews.add(Review.fromJson(Map<String, dynamic>.from(row as Map)));
+      }
     }
 
     return reviews;

@@ -260,11 +260,22 @@ class LocalSqliteBackend implements BackendAdapter {
 
   @override
   Future<List<Review>> getReviewsByRestroomId(int restroomId) async {
-    final rows = await _database.query(
-      'review',
-      where: 'restroom_id = ?',
-      whereArgs: [restroomId],
-      orderBy: 'datetime(review_dt) DESC',
+    final rows = await _database.rawQuery(
+      '''
+      SELECT 
+        r.review_id,
+        r.restroom_id,
+        r.user_id,
+        r.stars,
+        r.review_dt,
+        r.notes,
+        u.username AS display_name
+      FROM review r
+      LEFT JOIN users u ON r.user_id = u.id
+      WHERE r.restroom_id = ?
+      ORDER BY datetime(r.review_dt) DESC
+      ''',
+      [restroomId],
     );
 
     return rows
@@ -276,6 +287,7 @@ class LocalSqliteBackend implements BackendAdapter {
             stars: row['stars'] as int,
             reviewDt: DateTime.parse(row['review_dt'] as String),
             notes: row['notes'] as String?,
+            displayName: row['display_name'] as String?,
           ),
         )
         .toList();
