@@ -21,7 +21,6 @@ class _HomeScreenState extends State<HomeScreen> {
     const MapScreen(),
     const ListScreen(),
     const SettingsScreen(),
-    const DebugScreen(),
   ];
 
   @override
@@ -65,7 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.settings),
             label: 'Settings',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.bug_report), label: 'Debug'),
         ],
       ),
     );
