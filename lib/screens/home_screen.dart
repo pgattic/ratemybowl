@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/screens/map_screen.dart';
 import 'package:rate_my_bowl/screens/list_screen.dart';
 import 'package:rate_my_bowl/screens/options_screen.dart';
-import 'package:rate_my_bowl/screens/debug_screen.dart';
 import 'package:rate_my_bowl/widgets/bowl_logo.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,7 +20,6 @@ class _HomeScreenState extends State<HomeScreen> {
     const MapScreen(),
     const ListScreen(),
     const OptionsScreen(),
-    const DebugScreen(),
   ];
 
   @override
@@ -59,7 +57,6 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.settings),
             label: 'Options',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.bug_report), label: 'Debug'),
         ],
       ),
     );
