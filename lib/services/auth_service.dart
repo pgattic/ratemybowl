@@ -1,82 +1,76 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:rate_my_bowl/backend/backend_adapter.dart';
+import 'package:rate_my_bowl/backend/backend_provider.dart';
+import 'package:rate_my_bowl/models/app_user.dart';
 
 class AuthService extends ChangeNotifier {
+  final BackendAdapter _backend = backendAdapter;
+
+  StreamSubscription<AppUser?>? _authSubscription;
   bool _isAuthenticated = false;
   String? _email;
+  AppUser? _user;
 
   bool get isAuthenticated => _isAuthenticated;
   String? get email => _email;
+  String? get currentUserId => _user?.id;
 
   AuthService() {
-    // Listen to auth state changes for persistent authentication
-    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-      final session = data.session;
-      if (session != null) {
-        _isAuthenticated = true;
-        _email = session.user.email;
-      } else {
-        _isAuthenticated = false;
-        _email = null;
-      }
-      notifyListeners();
+    _authSubscription = _backend.authStateChanges.listen((user) {
+      _setUser(user);
     });
+  }
+
+  Future<void> checkAuthStatus() async {
+    final user = await _backend.getCurrentUser();
+    _setUser(user);
   }
 
   Future<bool> login(String email, String password) async {
     try {
-      final response = await Supabase.instance.client.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-
-      // The auth state listener will automatically update _isAuthenticated and _email
-      return response.user != null;
+      final user = await _backend.signIn(email, password);
+      final success = user != null;
+      if (success) {
+        _setUser(user);
+      }
+      return success;
     } catch (e) {
       debugPrint('Login error: $e');
       return false;
     }
   }
 
-  void logout() {
-    Supabase.instance.client.auth.signOut();
-    _isAuthenticated = false;
-    _email = null;
-    notifyListeners();
-  }
-
-  void checkAuthStatus() {
-    final session = Supabase.instance.client.auth.currentSession;
-
-    if (session != null) {
-      _isAuthenticated = true;
-      _email = session.user.email;
-      notifyListeners();
-    } else {
-      _isAuthenticated = false;
-      _email = null;
-      notifyListeners();
-    }
+  Future<void> logout() async {
+    await _backend.signOut();
+    _setUser(null);
   }
 
   Future<bool> register(String email, String username, String password) async {
     try {
-      final response = await Supabase.instance.client.auth.signUp(
-        email: email,
-        password: password,
-        data: {'username': username},
-      );
-
-      if (response.user != null) {
-        _isAuthenticated = true;
-        _email = response.user!.email;
-        notifyListeners();
-        return true;
+      final user = await _backend.signUp(email, username, password);
+      final success = user != null;
+      if (success) {
+        _setUser(user);
       }
-      return false;
+      return success;
     } catch (e) {
       debugPrint('Signup error: $e');
       return false;
     }
+  }
+
+  void _setUser(AppUser? user) {
+    _user = user;
+    _isAuthenticated = user != null;
+    _email = user?.email;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 }

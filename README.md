@@ -19,6 +19,18 @@ In addition, the following general information will be gathered about each restr
 - Hand-drying options (air blower, paper towel, or both)
 - Does it require a key (i.e. from the receptionist's desk)
 
+## Backend modes
+
+The app can now run against either Supabase or a fully offline SQLite database.
+By default Supabase is used, but you can swap backends at compile time with the `USE_SUPABASE` flag:
+
+```bash
+flutter run --dart-define=USE_SUPABASE=false
+flutter build apk --dart-define=USE_SUPABASE=false
+```
+
+When `USE_SUPABASE=false`, the app boots a local SQLite database that mirrors the schema defined in `schema.sql`, seeds a few default restrooms, and includes a demo account (`demo@ratemybowl.app` / `Password123`). You can sign up for additional offline accounts and everything (reviews, new restrooms, auth state) is stored locally so it works without a network connection.
+
 ## Roadmap
 
 The Roadmap can be viewed [here](roadmap.md).
@@ -47,4 +59,3 @@ This will provide a dev shell with a preconfigured Android emulator and system i
     - This *will* result in merge conflicts
     - Either create a new branch for a specific feature you're working on, or maintain your personal branch that you merge into master from
 - Before making any pull requests to Master, ensure that you are able to run `flutter clean` and `flutter run` without any compilation issues or instant crashes. Thank you!
-

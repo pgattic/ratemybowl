@@ -245,6 +245,7 @@
             gradle
             patchedFlutter
             wrappedEmulator
+            openssl
 
             # Android SDK components and environment
             androidEnv
@@ -289,7 +290,7 @@
             fontconfig
             freetype
             mesa-demos
-            linuxPackages.nvidia_x11
+            # linuxPackages.nvidia_x11
             libglvnd
 
             # System services and input handling
@@ -337,6 +338,7 @@
             pkgs.zlib
             pkgs.ncurses5
             pkgs.stdenv.cc.cc.lib
+            pkgs.openssl
 
             # Qt 5/6 and X11 GUI dependencies
             pkgs.libsForQt5.qt5.qtbase
@@ -369,7 +371,7 @@
             pkgs.libdrm
             pkgs.vulkan-loader
             pkgs.libglvnd
-            pkgs.linuxPackages.nvidia_x11
+            # pkgs.linuxPackages.nvidia_x11
             pkgs.fontconfig
             pkgs.freetype
 
