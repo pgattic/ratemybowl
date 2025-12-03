@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/restroom.dart';
 import '../models/review.dart';
 import '../services/review_service.dart';
+import '../services/auth_service.dart';
 
 class SelectedPinBottomSheet extends StatefulWidget {
   final Restroom restroom;
@@ -262,48 +264,71 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                   )
                 else
                   ..._reviews.map((review) {
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8.0),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                    return Consumer<AuthService>(
+                      builder: (context, authService, child) {
+                        final currentUserId = authService.currentUserId;
+                        final isCurrentUser = currentUserId != null &&
+                            currentUserId == review.userId;
+                        final userName = review.displayName ?? 'Anonymous';
+                        final displayText = isCurrentUser ? '$userName (you)' : userName;
+
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8.0),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                ...List.generate(5, (i) {
-                                  return Icon(
-                                    i < review.stars
-                                        ? Icons.star
-                                        : Icons.star_border,
-                                    color: Colors.amber,
-                                    size: 16,
-                                  );
-                                }),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _formatDate(review.reviewDt),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      displayText,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        ...List.generate(5, (i) {
+                                          return Icon(
+                                            i < review.stars
+                                                ? Icons.star
+                                                : Icons.star_border,
+                                            color: Colors.amber,
+                                            size: 16,
+                                          );
+                                        }),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          _formatDate(review.reviewDt),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
+                                if (review.notes != null &&
+                                    review.notes!.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    review.notes!,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color.fromARGB(255, 64, 64, 64),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
-                            if (review.notes != null &&
-                                review.notes!.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                review.notes!,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Color.fromARGB(255, 64, 64, 64),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     );
                   }),
               ],
