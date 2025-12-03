@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rate_my_bowl/screens/credits_screen.dart';
 import 'package:rate_my_bowl/widgets/custom_input_field.dart';
 import 'package:rate_my_bowl/screens/forgot_password_screen.dart';
 import 'package:rate_my_bowl/screens/register_screen.dart';
@@ -178,9 +179,19 @@ class _LoginScreenState extends State<LoginScreen>
             left: 0,
             right: 0,
             child: Center(
-              child: Text(
-                '© 2025 Tinkle Thinkers',
-                style: TextStyle(fontSize: 16.0, color: Colors.white),
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CreditsScreen(),
+                    ),
+                  );
+                },
+                child: Text(
+                  "© 2025 Tinkle Thinkers",
+                  style: TextStyle(fontSize: 16.0, color: Colors.white),
+                ),
               ),
             ),
           ),
