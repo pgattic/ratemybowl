@@ -26,7 +26,7 @@ class SplashAnimation extends StatefulWidget {
 
 class _SplashAnimationState extends State<SplashAnimation>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+  AnimationController? _controller;
   late AudioPlayer _audio;
 
   double waterLevel = 0;
@@ -75,11 +75,12 @@ class _SplashAnimationState extends State<SplashAnimation>
     _controller = AnimationController(vsync: this, duration: widget.duration)
       ..addListener(_onAnimate);
 
-    if (mounted) _controller.forward();
+    if (mounted) _controller!.forward();
   }
 
   void _onAnimate() {
-    final progress = _controller.value;
+    if (_controller == null) return;
+    final progress = _controller!.value;
 
     // Delay pouring start
     if (progress < 0.05) {
@@ -155,7 +156,7 @@ class _SplashAnimationState extends State<SplashAnimation>
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     _audio.dispose();
     super.dispose();
   }
