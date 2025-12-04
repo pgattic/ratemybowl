@@ -134,6 +134,10 @@ class LocalSqliteBackend implements BackendAdapter {
     required double lat,
     required double lng,
     required double radius,
+    bool? filterFemale,
+    bool? filterMale,
+    bool? filterUnisex,
+    double? minRating,
   }) async {
     final restroomsData = await _database.query('restroom');
     final statsRows = await _database.rawQuery('''
@@ -181,14 +185,29 @@ class LocalSqliteBackend implements BackendAdapter {
 
       final restroomId = row['restroom_id'] as int;
       final stat = stats[restroomId];
+      final gender = Restroom.getGender(row['gender'] as int);
+      final rating = stat?['avg_rating']?.toDouble() ?? 0.0;
+
+      if (filterFemale != null || filterMale != null || filterUnisex != null) {
+        final genderMatches = (filterFemale == true && gender == Gender.female) ||
+            (filterMale == true && gender == Gender.male) ||
+            (filterUnisex == true && gender == Gender.unisex);
+        if (!genderMatches) {
+          continue;
+        }
+      }
+
+      if (minRating != null && rating < minRating) {
+        continue;
+      }
 
       restrooms.add(
         Restroom(
           id: restroomId,
           name: row['name'] as String,
           coordinates: LatLng(restroomLat, restroomLng),
-          gender: Restroom.getGender(row['gender'] as int),
-          rating: stat?['avg_rating']?.toDouble() ?? 0.0,
+          gender: gender,
+          rating: rating,
           reviewCount: stat?['review_count']?.toInt() ?? 0,
           attributes: const [],
         ),
