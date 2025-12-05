@@ -44,7 +44,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
   bool _isSubmitting = false;
   
   List<Attribute> _allAttributes = [];
-  Map<int, int> _selectedAttributeRatings = {}; // attributeId -> rating (1-5)
+  final Map<int, int> _confirmedAttributeRatings = {};
+  Attribute? _pendingAttribute;
+  int _pendingRating = 3;
   bool _isLoadingAttributes = true;
 
   @override
@@ -84,27 +86,48 @@ class _ReviewScreenState extends State<ReviewScreen> {
     }
   }
   
-  void _addAttribute(Attribute attribute) {
+  void _selectPendingAttribute(Attribute attribute) {
     setState(() {
-      _selectedAttributeRatings[attribute.id] = 3;
+      _pendingAttribute = attribute;
+      _pendingRating = 3;
     });
   }
   
-  void _removeAttribute(int attributeId) {
+  void _confirmPendingAttribute() {
+    if (_pendingAttribute != null) {
+      setState(() {
+        _confirmedAttributeRatings[_pendingAttribute!.id] = _pendingRating;
+        _pendingAttribute = null;
+        _pendingRating = 3;
+      });
+    }
+  }
+  
+  void _cancelPendingAttribute() {
     setState(() {
-      _selectedAttributeRatings.remove(attributeId);
+      _pendingAttribute = null;
+      _pendingRating = 3;
     });
   }
   
-  void _updateAttributeRating(int attributeId, int rating) {
+  void _removeConfirmedAttribute(int attributeId) {
     setState(() {
-      _selectedAttributeRatings[attributeId] = rating;
+      _confirmedAttributeRatings.remove(attributeId);
+    });
+  }
+  
+  void _updatePendingRating(int rating) {
+    setState(() {
+      _pendingRating = rating;
     });
   }
   
   List<Attribute> get _availableAttributes {
-    final selectedIds = _selectedAttributeRatings.keys.toSet();
-    return _allAttributes.where((attr) => !selectedIds.contains(attr.id)).toList();
+    final usedIds = _confirmedAttributeRatings.keys.toSet();
+    if (_pendingAttribute != null) {
+      usedIds.add(_pendingAttribute!.id);
+    }
+    return _allAttributes.where((attr) => !usedIds.contains(attr.id)).toList();
   }
 
   @override
@@ -156,7 +179,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     });
 
     try {
-      final reviewAttributes = _selectedAttributeRatings.entries
+      final reviewAttributes = _confirmedAttributeRatings.entries
           .map((entry) => ReviewAttribute(
                 reviewId: 0,
                 attributeId: entry.key,
@@ -262,17 +285,20 @@ class _ReviewScreenState extends State<ReviewScreen> {
               const SizedBox(height: 16),
               
               if (!_isLoadingAttributes && _allAttributes.isNotEmpty) ...[
-                const Text(
-                  'Attributes (Optional)',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                const Padding(
+                  padding: EdgeInsets.only(left: 16.0),
+                  child: Text(
+                    'Attributes (Optional)',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
                 
-                if (_availableAttributes.isNotEmpty)
+                if (_pendingAttribute == null && _availableAttributes.isNotEmpty)
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16.0),
                     decoration: BoxDecoration(
@@ -282,9 +308,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     child: DropdownButton<Attribute>(
                       hint: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12.0),
-                        child: Text('Add an attribute...'),
+                        child: Text('Add an attribute...', style: TextStyle(color: Colors.grey)),
                       ),
                       isExpanded: true,
+                      underline: const SizedBox(),
                       items: _availableAttributes.map((attribute) {
                         return DropdownMenuItem<Attribute>(
                           value: attribute,
@@ -295,87 +322,73 @@ class _ReviewScreenState extends State<ReviewScreen> {
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
-                              Text(attribute.displayName),
+                              Text(attribute.displayName, style: const TextStyle(color: Colors.black)),
                             ],
                           ),
                         );
                       }).toList(),
                       onChanged: (attribute) {
                         if (attribute != null) {
-                          _addAttribute(attribute);
+                          _selectPendingAttribute(attribute);
                         }
                       },
                     ),
                   ),
                 
-                const SizedBox(height: 12),
-                
-                ..._selectedAttributeRatings.entries.map((entry) {
-                  final attribute = _allAttributes.firstWhere(
-                    (attr) => attr.id == entry.key,
-                  );
-                  final rating = entry.value;
-                  
-                  return Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 4.0,
-                    ),
+                if (_pendingAttribute != null)
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16.0),
                     padding: const EdgeInsets.all(12.0),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 1,
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  _getIconFromHex(attribute.icon),
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  attribute.displayName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                            Icon(
+                              _getIconFromHex(_pendingAttribute!.icon),
+                              size: 20,
+                              color: Colors.grey,
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.close, size: 20),
-                              onPressed: () => _removeAttribute(attribute.id),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _pendingAttribute!.displayName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            const Text('Rating: '),
+                            const Text('Rating: ', style: TextStyle(color: Colors.grey)),
                             Expanded(
                               child: Slider(
-                                value: rating.toDouble(),
+                                value: _pendingRating.toDouble(),
                                 min: 1.0,
                                 max: 5.0,
                                 divisions: 4,
-                                label: rating.toString(),
+                                label: _pendingRating.toString(),
                                 onChanged: (value) {
-                                  _updateAttributeRating(
-                                    attribute.id,
-                                    value.round(),
-                                  );
+                                  _updatePendingRating(value.round());
                                 },
+                                activeColor: Colors.black,
+                                inactiveColor: Colors.grey,
                               ),
                             ),
                             Text(
-                              rating.toString(),
+                              _pendingRating.toString(),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -383,10 +396,113 @@ class _ReviewScreenState extends State<ReviewScreen> {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: _cancelPendingAttribute,
+                              icon: const Icon(Icons.close, size: 18),
+                              label: const Text('Cancel'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: _confirmPendingAttribute,
+                              icon: const Icon(Icons.add, size: 18),
+                              label: const Text('Add'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
-                  );
-                }),
+                  ),
+                
+                const SizedBox(height: 12),
+                
+                if (_confirmedAttributeRatings.isNotEmpty) ...[
+                  const Padding(
+                    padding: EdgeInsets.only(left: 16.0),
+                    child: Text(
+                      'Added Attributes:',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ..._confirmedAttributeRatings.entries.map((entry) {
+                    final attribute = _allAttributes.firstWhere(
+                      (attr) => attr.id == entry.key,
+                    );
+                    final rating = entry.value;
+                    
+                    return Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 4.0,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0,
+                        vertical: 8.0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _getIconFromHex(attribute.icon),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              attribute.displayName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          ...List.generate(5, (i) {
+                            return Icon(
+                              i < rating ? Icons.star : Icons.star_border,
+                              color: Colors.amber,
+                              size: 16,
+                            );
+                          }),
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: () => _removeConfirmedAttribute(attribute.id),
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
                 
                 const SizedBox(height: 16),
               ],
