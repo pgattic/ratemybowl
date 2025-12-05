@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../models/attribute.dart';
 import '../models/restroom.dart';
 import '../models/review.dart';
+import '../services/attribute_service.dart';
 import '../services/review_service.dart';
 import '../services/auth_service.dart';
 
@@ -24,11 +26,49 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
   Map<String, Object>? display;
   List<Review> _reviews = [];
   bool _isLoadingReviews = false;
+  Map<int, double> _attributeAverages = {};
+  List<Attribute> _allAttributes = [];
+  bool _isLoadingAttributes = false;
 
   @override
   void initState() {
     super.initState();
     _loadReviews();
+    _loadAttributeAverages();
+  }
+  
+  Future<void> _loadAttributeAverages() async {
+    if (widget.restroom.id == null) return;
+    
+    setState(() => _isLoadingAttributes = true);
+    
+    try {
+      final attributes = await AttributeService.instance.getAllAttributes();
+      final averages = await AttributeService.instance
+          .getAttributeAveragesByRestroomId(widget.restroom.id!);
+      
+      if (mounted) {
+        setState(() {
+          _allAttributes = attributes;
+          _attributeAverages = averages;
+          _isLoadingAttributes = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading attribute averages: $e');
+      if (mounted) {
+        setState(() => _isLoadingAttributes = false);
+      }
+    }
+  }
+  
+  IconData _getIconFromHex(String hexCode) {
+    try {
+      final codePoint = int.parse(hexCode, radix: 16);
+      return IconData(codePoint, fontFamily: 'MaterialIcons');
+    } catch (e) {
+      return Icons.star;
+    }
   }
 
   Future<void> _loadReviews() async {
@@ -181,6 +221,71 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                   height: 32,
                 ),
 
+                // Attribute averages display
+                if (!_isLoadingAttributes && _attributeAverages.isNotEmpty) ...[
+                  const Text(
+                    'Attribute Ratings',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: _attributeAverages.entries.map((entry) {
+                      final attribute = _allAttributes.firstWhere(
+                        (attr) => attr.id == entry.key,
+                        orElse: () => Attribute(
+                          id: entry.key,
+                          displayName: 'Unknown',
+                          icon: 'e8b8',
+                        ),
+                      );
+                      final average = entry.value;
+                      
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _getIconFromHex(attribute.icon),
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              attribute.displayName,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              average.toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
                 if (display != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
@@ -209,6 +314,7 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
 
                             if (result is Map && result['success'] == true) {
                               _loadReviews();
+                              _loadAttributeAverages();
                             }
 
                             Navigator.of(context).pop(result);
@@ -322,6 +428,51 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                                       fontSize: 14,
                                       color: Color.fromARGB(255, 64, 64, 64),
                                     ),
+                                  ),
+                                ],
+                                if (review.attributes.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 4,
+                                    children: review.attributes.map((attr) {
+                                      final attribute = _allAttributes.firstWhere(
+                                        (a) => a.id == attr.attributeId,
+                                        orElse: () => Attribute(
+                                          id: attr.attributeId,
+                                          displayName: 'Unknown',
+                                          icon: 'e8b8',
+                                        ),
+                                      );
+                                      
+                                      return Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            _getIconFromHex(attribute.icon),
+                                            size: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${attribute.displayName}: ',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                          ...List.generate(5, (i) {
+                                            return Icon(
+                                              i < attr.rating
+                                                  ? Icons.star
+                                                  : Icons.star_border,
+                                              color: Colors.amber,
+                                              size: 12,
+                                            );
+                                          }),
+                                        ],
+                                      );
+                                    }).toList(),
                                   ),
                                 ],
                               ],

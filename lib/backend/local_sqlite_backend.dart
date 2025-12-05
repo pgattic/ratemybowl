@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:path/path.dart' as p;
 import 'package:rate_my_bowl/backend/backend_adapter.dart';
 import 'package:rate_my_bowl/models/app_user.dart';
+import 'package:rate_my_bowl/models/attribute.dart';
 import 'package:rate_my_bowl/models/restroom.dart';
 import 'package:rate_my_bowl/models/review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -314,13 +315,83 @@ class LocalSqliteBackend implements BackendAdapter {
 
   @override
   Future<void> addReview(Review review) async {
-    await _database.insert('review', {
+    final reviewId = await _database.insert('review', {
       'restroom_id': review.restroomId,
       'user_id': review.userId,
       'stars': review.stars,
       'review_dt': review.reviewDt.toIso8601String(),
       'notes': review.notes,
     });
+    
+    if (review.attributes.isNotEmpty) {
+      for (final attr in review.attributes) {
+        await _database.insert('review_to_attribute', {
+          'review_id': reviewId,
+          'attribute_id': attr.attributeId,
+          'rating': attr.rating,
+        });
+      }
+    }
+  }
+  
+  @override
+  Future<List<Attribute>> getAllAttributes() async {
+    final rows = await _database.query(
+      'attribute',
+      orderBy: 'id',
+    );
+    
+    return rows
+        .map((row) => Attribute(
+              id: row['id'] as int,
+              displayName: row['display_name'] as String,
+              icon: row['icon'] as String,
+            ))
+        .toList();
+  }
+  
+  @override
+  Future<Map<int, double>> getAttributeAveragesByRestroomId(int restroomId) async {
+    final reviewRows = await _database.query(
+      'review',
+      columns: ['review_id'],
+      where: 'restroom_id = ?',
+      whereArgs: [restroomId],
+    );
+    
+    final reviewIds = reviewRows
+        .where((row) => row['review_id'] != null)
+        .map((row) => row['review_id'] as int)
+        .toList();
+    
+    if (reviewIds.isEmpty) {
+      return {};
+    }
+    
+    final attrRows = await _database.rawQuery('''
+      SELECT attribute_id, rating
+      FROM review_to_attribute
+      WHERE review_id IN (${reviewIds.map((_) => '?').join(',')})
+    ''', reviewIds);
+    
+    if (attrRows.isEmpty) {
+      return {};
+    }
+    
+    final Map<int, List<int>> attributeRatings = {};
+    for (final row in attrRows) {
+      final attrId = row['attribute_id'] as int;
+      final rating = row['rating'] as int;
+      attributeRatings.putIfAbsent(attrId, () => []).add(rating);
+    }
+    
+    final Map<int, double> averages = {};
+    attributeRatings.forEach((attrId, ratings) {
+      final sum = ratings.fold<int>(0, (a, b) => a + b);
+      averages[attrId] = sum / ratings.length;
+    });
+    
+    return averages;
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -358,42 +429,20 @@ class LocalSqliteBackend implements BackendAdapter {
 
     await db.execute('''
       CREATE TABLE attribute(
-        attr_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        attr_key TEXT NOT NULL,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         display_name TEXT NOT NULL,
-        data_type TEXT NOT NULL,
-        unit TEXT,
-        min_value INTEGER,
-        max_value INTEGER,
-        applies_to TEXT NOT NULL
+        icon TEXT NOT NULL
       )
     ''');
 
     await db.execute('''
-      CREATE TABLE attribute_option(
-        option_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        attr_id INTEGER NOT NULL,
-        value_key TEXT NOT NULL,
-        display_name TEXT NOT NULL,
-        FOREIGN KEY(attr_id) REFERENCES attribute(attr_id)
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE attribute_value(
-        restroom_id INTEGER NOT NULL,
-        attr_id INTEGER NOT NULL,
-        value_bool INTEGER,
-        value_int INTEGER,
-        value_decimal REAL,
-        value_text TEXT,
-        value_option_id INTEGER,
-        review_id INTEGER,
-        PRIMARY KEY(restroom_id, attr_id),
-        FOREIGN KEY(restroom_id) REFERENCES restroom(restroom_id),
-        FOREIGN KEY(attr_id) REFERENCES attribute(attr_id),
-        FOREIGN KEY(value_option_id) REFERENCES attribute_option(option_id),
-        FOREIGN KEY(review_id) REFERENCES review(review_id)
+      CREATE TABLE review_to_attribute(
+        review_id INTEGER NOT NULL,
+        attribute_id INTEGER NOT NULL,
+        rating INTEGER NOT NULL,
+        PRIMARY KEY(review_id, attribute_id),
+        FOREIGN KEY(review_id) REFERENCES review(review_id) ON DELETE CASCADE,
+        FOREIGN KEY(attribute_id) REFERENCES attribute(id) ON DELETE CASCADE
       )
     ''');
 

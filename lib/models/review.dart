@@ -1,3 +1,5 @@
+import 'package:rate_my_bowl/models/review_attribute.dart';
+
 class Review {
   final int? reviewId;
   final int restroomId;
@@ -6,6 +8,7 @@ class Review {
   final DateTime reviewDt;
   final String? notes;
   final String? displayName;
+  final List<ReviewAttribute> attributes;
 
   const Review({
     this.reviewId,
@@ -15,6 +18,7 @@ class Review {
     required this.reviewDt,
     this.notes,
     this.displayName,
+    this.attributes = const [],
   });
 
   factory Review.fromJson(Map<String, dynamic> json) {

@@ -1,4 +1,5 @@
 import 'package:rate_my_bowl/models/app_user.dart';
+import 'package:rate_my_bowl/models/attribute.dart';
 import 'package:rate_my_bowl/models/restroom.dart';
 import 'package:rate_my_bowl/models/review.dart';
 
@@ -26,4 +27,8 @@ abstract class BackendAdapter {
 
   Future<List<Review>> getReviewsByRestroomId(int restroomId);
   Future<void> addReview(Review review);
+
+  Future<List<Attribute>> getAllAttributes();
+  
+  Future<Map<int, double>> getAttributeAveragesByRestroomId(int restroomId);
 }
