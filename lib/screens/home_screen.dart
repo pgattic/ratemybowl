@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:rate_my_bowl/services/auth_service.dart';
-import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/screens/map_screen.dart';
 import 'package:rate_my_bowl/screens/list_screen.dart';
 import 'package:rate_my_bowl/screens/options_screen.dart';

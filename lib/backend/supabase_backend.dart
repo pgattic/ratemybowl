@@ -94,6 +94,10 @@ class SupabaseBackend implements BackendAdapter {
     required double lat,
     required double lng,
     required double radius,
+    bool? filterFemale,
+    bool? filterMale,
+    bool? filterUnisex,
+    double? minRating,
   }) async {
     _ensureInitialized();
 
@@ -114,6 +118,19 @@ class SupabaseBackend implements BackendAdapter {
           Map<String, dynamic>.from(row as Map),
         );
         if (restroom != null) {
+          if (filterFemale != null || filterMale != null || filterUnisex != null) {
+            final genderMatches = (filterFemale == true && restroom.gender == Gender.female) ||
+                (filterMale == true && restroom.gender == Gender.male) ||
+                (filterUnisex == true && restroom.gender == Gender.unisex);
+            if (!genderMatches) {
+              continue;
+            }
+          }
+
+          if (minRating != null && restroom.rating < minRating) {
+            continue;
+          }
+
           restrooms.add(restroom);
         }
       }

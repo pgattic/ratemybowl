@@ -15,6 +15,10 @@ abstract class BackendAdapter {
     required double lat,
     required double lng,
     required double radius,
+    bool? filterFemale,
+    bool? filterMale,
+    bool? filterUnisex,
+    double? minRating,
   });
 
   Future<Restroom?> getRestroomById(int id);
