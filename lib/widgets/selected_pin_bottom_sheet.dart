@@ -234,54 +234,60 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                   Wrap(
                     spacing: 12,
                     runSpacing: 8,
-                    children: _attributeAverages.entries.map((entry) {
-                      final attribute = _allAttributes.firstWhere(
-                        (attr) => attr.id == entry.key,
-                        orElse: () => Attribute(
-                          id: entry.key,
-                          displayName: 'Unknown',
-                          icon: 'e8b8',
-                        ),
-                      );
-                      final average = entry.value;
-                      
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _getIconFromHex(attribute.icon),
-                              size: 18,
-                              color: Colors.white,
+                    children: (_attributeAverages.entries
+                        .map((entry) {
+                          final attribute = _allAttributes.firstWhere(
+                            (attr) => attr.id == entry.key,
+                            orElse: () => Attribute(
+                              id: entry.key,
+                              displayName: 'Unknown',
+                              icon: 'e157',
                             ),
-                            const SizedBox(width: 6),
-                            Text(
-                              attribute.displayName,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          );
+                          return (attribute: attribute, average: entry.value);
+                        })
+                        .toList()
+                      ..sort((a, b) => a.attribute.displayName
+                          .toLowerCase()
+                          .compareTo(b.attribute.displayName.toLowerCase())))
+                        .map((item) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              average.toStringAsFixed(1),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _getIconFromHex(item.attribute.icon),
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  item.attribute.displayName,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  item.average.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -435,16 +441,27 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                                   Wrap(
                                     spacing: 8,
                                     runSpacing: 4,
-                                    children: review.attributes.map((attr) {
-                                      final attribute = _allAttributes.firstWhere(
-                                        (a) => a.id == attr.attributeId,
-                                        orElse: () => Attribute(
-                                          id: attr.attributeId,
-                                          displayName: 'Unknown',
-                                          icon: 'e8b8',
-                                        ),
-                                      );
-                                      
+                                    children: (review.attributes
+                                      .map((attr) {
+                                        final attribute = _allAttributes.firstWhere(
+                                          (a) => a.id == attr.attributeId,
+                                          orElse: () => Attribute(
+                                            id: attr.attributeId,
+                                            displayName: 'Unknown',
+                                            icon: 'e157',
+                                          ),
+                                        );
+                                        
+                                        return (attr: attr, attribute: attribute);
+                                      })
+                                      .toList()
+                                      ..sort((a, b) => a.attribute.displayName
+                                          .toLowerCase()
+                                          .compareTo(b.attribute.displayName.toLowerCase()))
+                                    )
+                                    .map((item) {
+                                      final attr = item.attr;
+                                      final attribute = item.attribute;
                                       return Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
