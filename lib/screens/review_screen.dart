@@ -312,7 +312,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       ),
                       isExpanded: true,
                       underline: const SizedBox(),
-                      items: _availableAttributes.map((attribute) {
+                      items: (_availableAttributes.toList()
+                        ..sort((a, b) =>
+                            a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase())))
+                          .map((attribute) {
                         return DropdownMenuItem<Attribute>(
                           value: attribute,
                           child: Row(
