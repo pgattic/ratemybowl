@@ -210,7 +210,6 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                   height: 32,
                 ),
 
-                // Attribute averages display
                 if (!_isLoadingAttributeAverages && _attributeAverages.isNotEmpty) ...[
                   const Text(
                     'Attribute Ratings',
