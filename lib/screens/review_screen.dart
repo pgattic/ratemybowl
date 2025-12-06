@@ -66,15 +66,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
     });
   }
   
-  IconData _getIconFromHex(String hexCode) {
-    try {
-      final codePoint = int.parse(hexCode, radix: 16);
-      return IconData(codePoint, fontFamily: 'MaterialIcons');
-    } catch (e) {
-      return Icons.star;
-    }
-  }
-  
   void _selectPendingAttribute(Attribute attribute) {
     setState(() {
       _pendingAttribute = attribute;
@@ -310,7 +301,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           child: Row(
                             children: [
                               Icon(
-                                _getIconFromHex(attribute.icon),
+                                attribute.icon,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -345,7 +336,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         Row(
                           children: [
                             Icon(
-                              _getIconFromHex(_pendingAttribute!.icon),
+                              _pendingAttribute!.icon,
                               size: 20,
                               color: Colors.grey,
                             ),
@@ -432,11 +423,16 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  ..._confirmedAttributeRatings.entries.map((entry) {
-                    final attribute = _allAttributes.firstWhere(
-                      (attr) => attr.id == entry.key,
-                    );
-                    final rating = entry.value;
+                  ..._confirmedAttributeRatings.entries
+                      .map((entry) {
+                        final attribute = Attribute.fromId(entry.key);
+                        if (attribute == null) return null;
+                        return (attribute: attribute, rating: entry.value);
+                      })
+                      .whereType<({Attribute attribute, int rating})>()
+                      .map((item) {
+                    final attribute = item.attribute;
+                    final rating = item.rating;
                     
                     return Container(
                       margin: const EdgeInsets.symmetric(
@@ -454,7 +450,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       child: Row(
                         children: [
                           Icon(
-                            _getIconFromHex(attribute.icon),
+                            attribute.icon,
                             size: 18,
                           ),
                           const SizedBox(width: 8),

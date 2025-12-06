@@ -5,7 +5,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:rate_my_bowl/backend/backend_adapter.dart';
 import 'package:rate_my_bowl/models/app_user.dart';
-import 'package:rate_my_bowl/models/attribute.dart';
 import 'package:rate_my_bowl/models/restroom.dart';
 import 'package:rate_my_bowl/models/review.dart';
 import 'package:rate_my_bowl/models/review_attribute.dart';
@@ -199,7 +198,7 @@ class SupabaseBackend implements BackendAdapter {
         if (reviewId != null) {
           try {
             final attrResponse = await _client
-                .from('review_to_attribute_TEMPTEMPTEMP')
+                .from('review_attribute')
                 .select('*')
                 .eq('review_id', reviewId);
             
@@ -248,25 +247,7 @@ class SupabaseBackend implements BackendAdapter {
         'rating': attr.rating,
       }).toList();
       
-      await _client.from('review_to_attribute_TEMPTEMPTEMP').insert(attributesToInsert);
-    }
-  }
-  
-  @override
-  Future<List<Attribute>> getAllAttributes() async {
-    _ensureInitialized();
-    try {
-      final response = await _client
-          .from('attribute_TEMPTEMPTEMP')
-          .select('*')
-          .order('id');
-      
-      return (response as List)
-          .map((row) => Attribute.fromJson(Map<String, dynamic>.from(row as Map)))
-          .toList();
-    } catch (e) {
-      debugPrint('Error fetching attributes: $e');
-      return [];
+      await _client.from('review_attribute').insert(attributesToInsert);
     }
   }
   
@@ -289,7 +270,7 @@ class SupabaseBackend implements BackendAdapter {
       for (final reviewId in reviewIds) {
         try {
           final response = await _client
-              .from('review_to_attribute_TEMPTEMPTEMP')
+              .from('review_attribute')
               .select('*')
               .eq('review_id', reviewId);
           

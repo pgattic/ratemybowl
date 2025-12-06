@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:rate_my_bowl/backend/backend_provider.dart';
 import 'package:rate_my_bowl/controllers/location_controller.dart';
 import 'package:rate_my_bowl/screens/home_screen.dart';
-import 'package:rate_my_bowl/services/attribute_service.dart';
 import 'package:rate_my_bowl/services/auth_service.dart';
 import 'package:rate_my_bowl/theme.dart';
 import 'package:rate_my_bowl/widgets/app_splash_wrapper.dart';
@@ -16,8 +15,6 @@ void main() async {
   await dotenv.load();
 
   await initializeBackend();
-
-  await AttributeService.instance.initialize();
 
   Widget startPage;
   switch (start) {

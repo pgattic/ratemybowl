@@ -7,7 +7,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:path/path.dart' as p;
 import 'package:rate_my_bowl/backend/backend_adapter.dart';
 import 'package:rate_my_bowl/models/app_user.dart';
-import 'package:rate_my_bowl/models/attribute.dart';
 import 'package:rate_my_bowl/models/restroom.dart';
 import 'package:rate_my_bowl/models/review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -325,29 +324,13 @@ class LocalSqliteBackend implements BackendAdapter {
     
     if (review.attributes.isNotEmpty) {
       for (final attr in review.attributes) {
-        await _database.insert('review_to_attribute', {
+        await _database.insert('review_attribute', {
           'review_id': reviewId,
           'attribute_id': attr.attributeId,
           'rating': attr.rating,
         });
       }
     }
-  }
-  
-  @override
-  Future<List<Attribute>> getAllAttributes() async {
-    final rows = await _database.query(
-      'attribute',
-      orderBy: 'id',
-    );
-    
-    return rows
-        .map((row) => Attribute(
-              id: row['id'] as int,
-              displayName: row['display_name'] as String,
-              icon: row['icon'] as String,
-            ))
-        .toList();
   }
   
   @override
@@ -370,7 +353,7 @@ class LocalSqliteBackend implements BackendAdapter {
     
     final attrRows = await _database.rawQuery('''
       SELECT attribute_id, rating
-      FROM review_to_attribute
+      FROM review_attribute
       WHERE review_id IN (${reviewIds.map((_) => '?').join(',')})
     ''', reviewIds);
     
@@ -428,21 +411,12 @@ class LocalSqliteBackend implements BackendAdapter {
     ''');
 
     await db.execute('''
-      CREATE TABLE attribute(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        display_name TEXT NOT NULL,
-        icon TEXT NOT NULL
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE review_to_attribute(
+      CREATE TABLE review_attribute(
         review_id INTEGER NOT NULL,
         attribute_id INTEGER NOT NULL,
         rating INTEGER NOT NULL,
         PRIMARY KEY(review_id, attribute_id),
-        FOREIGN KEY(review_id) REFERENCES review(review_id) ON DELETE CASCADE,
-        FOREIGN KEY(attribute_id) REFERENCES attribute(id) ON DELETE CASCADE
+        FOREIGN KEY(review_id) REFERENCES review(review_id) ON DELETE CASCADE
       )
     ''');
 

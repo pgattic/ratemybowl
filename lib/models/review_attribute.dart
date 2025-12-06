@@ -1,3 +1,5 @@
+import 'package:rate_my_bowl/models/attribute.dart';
+
 class ReviewAttribute {
   final int reviewId;
   final int attributeId;
@@ -8,6 +10,8 @@ class ReviewAttribute {
     required this.attributeId,
     required this.rating,
   });
+
+  Attribute? get attribute => Attribute.fromId(attributeId);
 
   factory ReviewAttribute.fromJson(Map<String, dynamic> json) {
     return ReviewAttribute(
@@ -25,4 +29,3 @@ class ReviewAttribute {
     };
   }
 }
-

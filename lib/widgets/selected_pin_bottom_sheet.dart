@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/attribute.dart';
 import '../models/restroom.dart';
 import '../models/review.dart';
+import '../models/review_attribute.dart';
 import '../services/attribute_service.dart';
 import '../services/review_service.dart';
 import '../services/auth_service.dart';
@@ -28,8 +29,6 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
   bool _isLoadingReviews = false;
   Map<int, double> _attributeAverages = {};
   bool _isLoadingAttributeAverages = false;
-
-  List<Attribute> get _allAttributes => AttributeService.instance.attributes;
 
   @override
   void initState() {
@@ -61,15 +60,6 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
     }
   }
   
-  IconData _getIconFromHex(String hexCode) {
-    try {
-      final codePoint = int.parse(hexCode, radix: 16);
-      return IconData(codePoint, fontFamily: 'MaterialIcons');
-    } catch (e) {
-      return Icons.star;
-    }
-  }
-
   Future<void> _loadReviews() async {
     setState(() => _isLoadingReviews = true);
 
@@ -230,60 +220,57 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: (_attributeAverages.entries
                         .map((entry) {
-                          final attribute = _allAttributes.firstWhere(
-                            (attr) => attr.id == entry.key,
-                            orElse: () => Attribute(
-                              id: entry.key,
-                              displayName: 'Unknown',
-                              icon: 'e157',
-                            ),
-                          );
+                          final attribute = Attribute.fromId(entry.key);
+                          if (attribute == null) return null;
                           return (attribute: attribute, average: entry.value);
                         })
+                        .whereType<({Attribute attribute, double average})>()
                         .toList()
                       ..sort((a, b) => a.attribute.displayName
                           .toLowerCase()
                           .compareTo(b.attribute.displayName.toLowerCase())))
                         .map((item) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  _getIconFromHex(item.attribute.icon),
-                                  size: 18,
-                                  color: Colors.white,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  item.attribute.displayName,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    item.attribute.icon,
+                                    size: 18,
+                                    color: Colors.white,
                                   ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  item.average.toStringAsFixed(1),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    item.attribute.displayName,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    item.average.toStringAsFixed(1),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         }).toList(),
@@ -437,22 +424,15 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                                 ],
                                 if (review.attributes.isNotEmpty) ...[
                                   const SizedBox(height: 8),
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 4,
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: (review.attributes
                                       .map((attr) {
-                                        final attribute = _allAttributes.firstWhere(
-                                          (a) => a.id == attr.attributeId,
-                                          orElse: () => Attribute(
-                                            id: attr.attributeId,
-                                            displayName: 'Unknown',
-                                            icon: 'e157',
-                                          ),
-                                        );
-                                        
+                                        final attribute = Attribute.fromId(attr.attributeId);
+                                        if (attribute == null) return null;
                                         return (attr: attr, attribute: attribute);
                                       })
+                                      .whereType<({ReviewAttribute attr, Attribute attribute})>()
                                       .toList()
                                       ..sort((a, b) => a.attribute.displayName
                                           .toLowerCase()
@@ -461,32 +441,35 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                                     .map((item) {
                                       final attr = item.attr;
                                       final attribute = item.attribute;
-                                      return Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            _getIconFromHex(attribute.icon),
-                                            size: 14,
-                                            color: Colors.grey[600],
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '${attribute.displayName}: ',
-                                            style: TextStyle(
-                                              fontSize: 12,
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 4),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              attribute.icon,
+                                              size: 14,
                                               color: Colors.grey[600],
                                             ),
-                                          ),
-                                          ...List.generate(5, (i) {
-                                            return Icon(
-                                              i < attr.rating
-                                                  ? Icons.star
-                                                  : Icons.star_border,
-                                              color: Colors.amber,
-                                              size: 12,
-                                            );
-                                          }),
-                                        ],
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${attribute.displayName}: ',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                            ...List.generate(5, (i) {
+                                              return Icon(
+                                                i < attr.rating
+                                                    ? Icons.star
+                                                    : Icons.star_border,
+                                                color: Colors.amber,
+                                                size: 12,
+                                              );
+                                            }),
+                                          ],
+                                        ),
                                       );
                                     }).toList(),
                                   ),
