@@ -59,22 +59,11 @@ class _ReviewScreenState extends State<ReviewScreen> {
     _loadAttributes();
   }
   
-  Future<void> _loadAttributes() async {
-    try {
-      final attributes = await AttributeService.instance.getAllAttributes();
-      if (mounted) {
-        setState(() {
-          _allAttributes = attributes;
-          _isLoadingAttributes = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoadingAttributes = false;
-        });
-      }
-    }
+  void _loadAttributes() {
+    setState(() {
+      _allAttributes = AttributeService.instance.attributes;
+      _isLoadingAttributes = false;
+    });
   }
   
   IconData _getIconFromHex(String hexCode) {

@@ -27,8 +27,9 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
   List<Review> _reviews = [];
   bool _isLoadingReviews = false;
   Map<int, double> _attributeAverages = {};
-  List<Attribute> _allAttributes = [];
-  bool _isLoadingAttributes = false;
+  bool _isLoadingAttributeAverages = false;
+
+  List<Attribute> get _allAttributes => AttributeService.instance.attributes;
 
   @override
   void initState() {
@@ -40,24 +41,22 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
   Future<void> _loadAttributeAverages() async {
     if (widget.restroom.id == null) return;
     
-    setState(() => _isLoadingAttributes = true);
+    setState(() => _isLoadingAttributeAverages = true);
     
     try {
-      final attributes = await AttributeService.instance.getAllAttributes();
       final averages = await AttributeService.instance
           .getAttributeAveragesByRestroomId(widget.restroom.id!);
       
       if (mounted) {
         setState(() {
-          _allAttributes = attributes;
           _attributeAverages = averages;
-          _isLoadingAttributes = false;
+          _isLoadingAttributeAverages = false;
         });
       }
     } catch (e) {
       debugPrint('Error loading attribute averages: $e');
       if (mounted) {
-        setState(() => _isLoadingAttributes = false);
+        setState(() => _isLoadingAttributeAverages = false);
       }
     }
   }
@@ -222,7 +221,7 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                 ),
 
                 // Attribute averages display
-                if (!_isLoadingAttributes && _attributeAverages.isNotEmpty) ...[
+                if (!_isLoadingAttributeAverages && _attributeAverages.isNotEmpty) ...[
                   const Text(
                     'Attribute Ratings',
                     style: TextStyle(
