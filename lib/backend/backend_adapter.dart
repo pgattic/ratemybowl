@@ -26,4 +26,6 @@ abstract class BackendAdapter {
 
   Future<List<Review>> getReviewsByRestroomId(int restroomId);
   Future<void> addReview(Review review);
+
+  Future<Map<int, double>> getAttributeAveragesByRestroomId(int restroomId);
 }

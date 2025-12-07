@@ -7,6 +7,7 @@ import 'package:rate_my_bowl/backend/backend_adapter.dart';
 import 'package:rate_my_bowl/models/app_user.dart';
 import 'package:rate_my_bowl/models/restroom.dart';
 import 'package:rate_my_bowl/models/review.dart';
+import 'package:rate_my_bowl/models/review_attribute.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseBackend implements BackendAdapter {
@@ -190,7 +191,38 @@ class SupabaseBackend implements BackendAdapter {
 
     if (response != null) {
       for (final dynamic row in (response as List)) {
-        reviews.add(Review.fromJson(Map<String, dynamic>.from(row as Map)));
+        final reviewJson = Map<String, dynamic>.from(row as Map);
+        final reviewId = reviewJson['review_id'] as int?;
+        
+        List<ReviewAttribute> attributes = [];
+        if (reviewId != null) {
+          try {
+            final attrResponse = await _client
+                .from('review_attribute')
+                .select('*')
+                .eq('review_id', reviewId);
+            
+            for (final attrRow in attrResponse) {
+              attributes.add(ReviewAttribute.fromJson(
+                Map<String, dynamic>.from(attrRow as Map),
+              ));
+            }
+          } catch (e) {
+            debugPrint('Error fetching review attributes: $e');
+          }
+        }
+        
+        final review = Review.fromJson(reviewJson);
+        reviews.add(Review(
+          reviewId: review.reviewId,
+          restroomId: review.restroomId,
+          userId: review.userId,
+          stars: review.stars,
+          reviewDt: review.reviewDt,
+          notes: review.notes,
+          displayName: review.displayName,
+          attributes: attributes,
+        ));
       }
     }
 
@@ -200,7 +232,73 @@ class SupabaseBackend implements BackendAdapter {
   @override
   Future<void> addReview(Review review) async {
     _ensureInitialized();
-    await _client.from('review').insert(review.toJson());
+    final reviewResponse = await _client
+        .from('review')
+        .insert(review.toJson())
+        .select()
+        .single();
+    
+    final reviewId = reviewResponse['review_id'] as int?;
+    
+    if (reviewId != null && review.attributes.isNotEmpty) {
+      final attributesToInsert = review.attributes.map((attr) => {
+        'review_id': reviewId,
+        'attribute_id': attr.attributeId,
+        'rating': attr.rating,
+      }).toList();
+      
+      await _client.from('review_attribute').insert(attributesToInsert);
+    }
+  }
+  
+  @override
+  Future<Map<int, double>> getAttributeAveragesByRestroomId(int restroomId) async {
+    _ensureInitialized();
+    try {
+      final reviews = await getReviewsByRestroomId(restroomId);
+      final reviewIds = reviews
+          .where((r) => r.reviewId != null)
+          .map((r) => r.reviewId!)
+          .toList();
+      
+      if (reviewIds.isEmpty) {
+        return {};
+      }
+      
+      final Map<int, List<int>> attributeRatings = {};
+      
+      for (final reviewId in reviewIds) {
+        try {
+          final response = await _client
+              .from('review_attribute')
+              .select('*')
+              .eq('review_id', reviewId);
+          
+          for (final row in response as List) {
+            final attrId = row['attribute_id'] as int;
+            final rating = row['rating'] as int;
+            attributeRatings.putIfAbsent(attrId, () => []).add(rating);
+          }
+        } catch (e) {
+          debugPrint('Error fetching attributes for review $reviewId: $e');
+        }
+      }
+      
+      if (attributeRatings.isEmpty) {
+        return {};
+      }
+      
+      final Map<int, double> averages = {};
+      attributeRatings.forEach((attrId, ratings) {
+        final sum = ratings.fold<int>(0, (a, b) => a + b);
+        averages[attrId] = sum / ratings.length;
+      });
+      
+      return averages;
+    } catch (e) {
+      debugPrint('Error fetching attribute averages: $e');
+      return {};
+    }
   }
 
   Restroom? _restroomFromRpcRow(Map<String, dynamic> row) {

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../models/attribute.dart';
 import '../models/restroom.dart';
 import '../models/review.dart';
+import '../models/review_attribute.dart';
+import '../services/attribute_service.dart';
 import '../services/review_service.dart';
 import '../services/auth_service.dart';
 
@@ -24,13 +27,39 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
   Map<String, Object>? display;
   List<Review> _reviews = [];
   bool _isLoadingReviews = false;
+  Map<int, double> _attributeAverages = {};
+  bool _isLoadingAttributeAverages = false;
 
   @override
   void initState() {
     super.initState();
     _loadReviews();
+    _loadAttributeAverages();
   }
-
+  
+  Future<void> _loadAttributeAverages() async {
+    if (widget.restroom.id == null) return;
+    
+    setState(() => _isLoadingAttributeAverages = true);
+    
+    try {
+      final averages = await AttributeService.instance
+          .getAttributeAveragesByRestroomId(widget.restroom.id!);
+      
+      if (mounted) {
+        setState(() {
+          _attributeAverages = averages;
+          _isLoadingAttributeAverages = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading attribute averages: $e');
+      if (mounted) {
+        setState(() => _isLoadingAttributeAverages = false);
+      }
+    }
+  }
+  
   Future<void> _loadReviews() async {
     setState(() => _isLoadingReviews = true);
 
@@ -181,6 +210,73 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                   height: 32,
                 ),
 
+                if (!_isLoadingAttributeAverages && _attributeAverages.isNotEmpty) ...[
+                  const Text(
+                    'Attribute Ratings',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: (_attributeAverages.entries
+                        .map((entry) {
+                          final attribute = Attribute.fromId(entry.key);
+                          if (attribute == null) return null;
+                          return (attribute: attribute, average: entry.value);
+                        })
+                        .whereType<({Attribute attribute, double average})>()
+                        .toList()
+                      ..sort((a, b) => a.attribute.displayName
+                          .toLowerCase()
+                          .compareTo(b.attribute.displayName.toLowerCase())))
+                        .map((item) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    item.attribute.icon,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    item.attribute.displayName,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    item.average.toStringAsFixed(1),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
                 if (display != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
@@ -209,6 +305,7 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
 
                             if (result is Map && result['success'] == true) {
                               _loadReviews();
+                              _loadAttributeAverages();
                             }
 
                             Navigator.of(context).pop(result);
@@ -322,6 +419,58 @@ class _SelectedPinBottomSheetState extends State<SelectedPinBottomSheet> {
                                       fontSize: 14,
                                       color: Color.fromARGB(255, 64, 64, 64),
                                     ),
+                                  ),
+                                ],
+                                if (review.attributes.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: (review.attributes
+                                      .map((attr) {
+                                        final attribute = Attribute.fromId(attr.attributeId);
+                                        if (attribute == null) return null;
+                                        return (attr: attr, attribute: attribute);
+                                      })
+                                      .whereType<({ReviewAttribute attr, Attribute attribute})>()
+                                      .toList()
+                                      ..sort((a, b) => a.attribute.displayName
+                                          .toLowerCase()
+                                          .compareTo(b.attribute.displayName.toLowerCase()))
+                                    )
+                                    .map((item) {
+                                      final attr = item.attr;
+                                      final attribute = item.attribute;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 4),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              attribute.icon,
+                                              size: 14,
+                                              color: Colors.grey[600],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${attribute.displayName}: ',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                            ...List.generate(5, (i) {
+                                              return Icon(
+                                                i < attr.rating
+                                                    ? Icons.star
+                                                    : Icons.star_border,
+                                                color: Colors.amber,
+                                                size: 12,
+                                              );
+                                            }),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
                                   ),
                                 ],
                               ],

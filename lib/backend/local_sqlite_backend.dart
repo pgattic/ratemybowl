@@ -7,8 +7,10 @@ import 'package:latlong2/latlong.dart';
 import 'package:path/path.dart' as p;
 import 'package:rate_my_bowl/backend/backend_adapter.dart';
 import 'package:rate_my_bowl/models/app_user.dart';
+import 'package:rate_my_bowl/models/attribute.dart';
 import 'package:rate_my_bowl/models/restroom.dart';
 import 'package:rate_my_bowl/models/review.dart';
+import 'package:rate_my_bowl/models/review_attribute.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
@@ -281,7 +283,7 @@ class LocalSqliteBackend implements BackendAdapter {
   Future<List<Review>> getReviewsByRestroomId(int restroomId) async {
     final rows = await _database.rawQuery(
       '''
-      SELECT 
+      SELECT
         r.review_id,
         r.restroom_id,
         r.user_id,
@@ -297,30 +299,119 @@ class LocalSqliteBackend implements BackendAdapter {
       [restroomId],
     );
 
+    final reviewIds = rows
+        .map((row) => row['review_id'])
+        .whereType<int>()
+        .toList(growable: false);
+    final Map<int, List<ReviewAttribute>> attributesByReview = {};
+
+    if (reviewIds.isNotEmpty) {
+      final placeholders = List.filled(reviewIds.length, '?').join(',');
+      final attrRows = await _database.rawQuery(
+        '''
+        SELECT review_id, attribute_id, rating
+        FROM review_attribute
+        WHERE review_id IN ($placeholders)
+        ''',
+        reviewIds,
+      );
+
+      for (final attrRow in attrRows) {
+        final reviewId = attrRow['review_id'] as int;
+        attributesByReview.putIfAbsent(reviewId, () => []).add(
+              ReviewAttribute(
+                reviewId: reviewId,
+                attributeId: attrRow['attribute_id'] as int,
+                rating: attrRow['rating'] as int,
+              ),
+            );
+      }
+    }
+
     return rows
         .map(
-          (row) => Review(
-            reviewId: row['review_id'] as int,
-            restroomId: row['restroom_id'] as int,
-            userId: row['user_id'] as String,
-            stars: row['stars'] as int,
-            reviewDt: DateTime.parse(row['review_dt'] as String),
-            notes: row['notes'] as String?,
-            displayName: row['display_name'] as String?,
-          ),
+          (row) {
+            final reviewId = row['review_id'] as int;
+            return Review(
+              reviewId: reviewId,
+              restroomId: row['restroom_id'] as int,
+              userId: row['user_id'] as String,
+              stars: row['stars'] as int,
+              reviewDt: DateTime.parse(row['review_dt'] as String),
+              notes: row['notes'] as String?,
+              displayName: row['display_name'] as String?,
+              attributes: List<ReviewAttribute>.unmodifiable(
+                attributesByReview[reviewId] ?? const <ReviewAttribute>[],
+              ),
+            );
+          },
         )
         .toList();
   }
 
   @override
   Future<void> addReview(Review review) async {
-    await _database.insert('review', {
+    final reviewId = await _database.insert('review', {
       'restroom_id': review.restroomId,
       'user_id': review.userId,
       'stars': review.stars,
       'review_dt': review.reviewDt.toIso8601String(),
       'notes': review.notes,
     });
+
+    if (review.attributes.isNotEmpty) {
+      for (final attr in review.attributes) {
+        await _database.insert('review_attribute', {
+          'review_id': reviewId,
+          'attribute_id': attr.attributeId,
+          'rating': attr.rating,
+        });
+      }
+    }
+  }
+
+  @override
+  Future<Map<int, double>> getAttributeAveragesByRestroomId(int restroomId) async {
+    final reviewRows = await _database.query(
+      'review',
+      columns: ['review_id'],
+      where: 'restroom_id = ?',
+      whereArgs: [restroomId],
+    );
+
+    final reviewIds = reviewRows
+        .where((row) => row['review_id'] != null)
+        .map((row) => row['review_id'] as int)
+        .toList();
+
+    if (reviewIds.isEmpty) {
+      return {};
+    }
+
+    final attrRows = await _database.rawQuery('''
+      SELECT attribute_id, rating
+      FROM review_attribute
+      WHERE review_id IN (${reviewIds.map((_) => '?').join(',')})
+    ''', reviewIds);
+
+    if (attrRows.isEmpty) {
+      return {};
+    }
+
+    final Map<int, List<int>> attributeRatings = {};
+    for (final row in attrRows) {
+      final attrId = row['attribute_id'] as int;
+      final rating = row['rating'] as int;
+      attributeRatings.putIfAbsent(attrId, () => []).add(rating);
+    }
+
+    final Map<int, double> averages = {};
+    attributeRatings.forEach((attrId, ratings) {
+      final sum = ratings.fold<int>(0, (a, b) => a + b);
+      averages[attrId] = sum / ratings.length;
+    });
+
+    return averages;
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -357,62 +448,64 @@ class LocalSqliteBackend implements BackendAdapter {
     ''');
 
     await db.execute('''
-      CREATE TABLE attribute(
-        attr_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        attr_key TEXT NOT NULL,
-        display_name TEXT NOT NULL,
-        data_type TEXT NOT NULL,
-        unit TEXT,
-        min_value INTEGER,
-        max_value INTEGER,
-        applies_to TEXT NOT NULL
+      CREATE TABLE review_attribute(
+        review_id INTEGER NOT NULL,
+        attribute_id INTEGER NOT NULL,
+        rating INTEGER NOT NULL,
+        PRIMARY KEY(review_id, attribute_id),
+        FOREIGN KEY(review_id) REFERENCES review(review_id) ON DELETE CASCADE
       )
     ''');
 
-    await db.execute('''
-      CREATE TABLE attribute_option(
-        option_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        attr_id INTEGER NOT NULL,
-        value_key TEXT NOT NULL,
-        display_name TEXT NOT NULL,
-        FOREIGN KEY(attr_id) REFERENCES attribute(attr_id)
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE attribute_value(
-        restroom_id INTEGER NOT NULL,
-        attr_id INTEGER NOT NULL,
-        value_bool INTEGER,
-        value_int INTEGER,
-        value_decimal REAL,
-        value_text TEXT,
-        value_option_id INTEGER,
-        review_id INTEGER,
-        PRIMARY KEY(restroom_id, attr_id),
-        FOREIGN KEY(restroom_id) REFERENCES restroom(restroom_id),
-        FOREIGN KEY(attr_id) REFERENCES attribute(attr_id),
-        FOREIGN KEY(value_option_id) REFERENCES attribute_option(option_id),
-        FOREIGN KEY(review_id) REFERENCES review(review_id)
-      )
-    ''');
-
-    final demoUserId = await _seedDemoUser(db);
-    await _seedRestrooms(db, demoUserId);
+    final seededUsers = await _seedDemoUsers(db);
+    await _seedRestrooms(db, seededUsers);
   }
 
-  Future<String> _seedDemoUser(Database db) async {
-    final demoId = _uuid.v4();
-    await db.insert('users', {
-      'id': demoId,
-      'email': 'demo@ratemybowl.app',
-      'username': 'demo',
-      'password_hash': _hashPassword('Password123'),
-    });
-    return demoId;
+  Future<Map<String, String>> _seedDemoUsers(Database db) async {
+    final seedUsers = [
+      {
+        'key': 'demo',
+        'email': 'demo@ratemybowl.app',
+        'username': 'demo',
+        'password': 'Password123',
+      },
+      {
+        'key': 'taylor',
+        'email': 'taylor@ratemybowl.app',
+        'username': 'taylorrivers',
+        'password': 'Password123',
+      },
+      {
+        'key': 'casey',
+        'email': 'casey@ratemybowl.app',
+        'username': 'caseyblue',
+        'password': 'Password123',
+      },
+    ];
+
+    final Map<String, String> userIds = {};
+    for (final user in seedUsers) {
+      final userId = _uuid.v4();
+      await db.insert('users', {
+        'id': userId,
+        'email': user['email'],
+        'username': user['username'],
+        'password_hash': _hashPassword(user['password'] as String),
+      });
+      userIds[user['key'] as String] = userId;
+    }
+
+    return userIds;
   }
 
-  Future<void> _seedRestrooms(Database db, String demoUserId) async {
+  Future<void> _seedRestrooms(
+    Database db,
+    Map<String, String> userIds,
+  ) async {
+    final defaultUserId = userIds['demo'] ?? userIds.values.first;
+    final now = DateTime.now();
+    var reviewCounter = 0;
+
     final seedRestrooms = [
       {
         'name': 'Library Level 1 Commons',
@@ -421,8 +514,23 @@ class LocalSqliteBackend implements BackendAdapter {
         'lng': -111.6512,
         'reviews': [
           {
+            'user': 'demo',
             'stars': 5,
-            'notes': 'Pristine porcelain and calming vibes.'
+            'notes': 'Pristine porcelain and calming vibes.',
+            'attributes': [
+              {'attribute': Attribute.toiletPaperQuality, 'rating': 5},
+              {'attribute': Attribute.handDryingOptions, 'rating': 4},
+              {'attribute': Attribute.smell, 'rating': 5},
+            ],
+          },
+          {
+            'user': 'taylor',
+            'stars': 4,
+            'notes': 'Quiet even during finals week and stocked with soap.',
+            'attributes': [
+              {'attribute': Attribute.easeOfAccess, 'rating': 4},
+              {'attribute': Attribute.wheelchairAccessibility, 'rating': 5},
+            ],
           },
         ],
       },
@@ -433,8 +541,23 @@ class LocalSqliteBackend implements BackendAdapter {
         'lng': -111.6509,
         'reviews': [
           {
+            'user': 'casey',
             'stars': 3,
-            'notes': 'Gets busy during lunch but stays tidy.'
+            'notes': 'Gets busy during lunch but stays tidy.',
+            'attributes': [
+              {'attribute': Attribute.smell, 'rating': 3},
+              {'attribute': Attribute.toiletPaperQuality, 'rating': 2},
+              {'attribute': Attribute.handDryingOptions, 'rating': 3},
+            ],
+          },
+          {
+            'user': 'demo',
+            'stars': 4,
+            'notes': 'Crew wipes things down every hour on the hour.',
+            'attributes': [
+              {'attribute': Attribute.babyChangingStation, 'rating': 2},
+              {'attribute': Attribute.handDryingOptions, 'rating': 4},
+            ],
           },
         ],
       },
@@ -445,8 +568,104 @@ class LocalSqliteBackend implements BackendAdapter {
         'lng': -111.6499,
         'reviews': [
           {
+            'user': 'taylor',
             'stars': 4,
-            'notes': 'Bright lighting and endless paper towels.'
+            'notes': 'Bright lighting and endless paper towels.',
+            'attributes': [
+              {'attribute': Attribute.easeOfAccess, 'rating': 5},
+              {'attribute': Attribute.toiletPaperQuality, 'rating': 4},
+            ],
+          },
+          {
+            'user': 'casey',
+            'stars': 5,
+            'notes': 'Plants, music, and spotless counters.',
+            'attributes': [
+              {'attribute': Attribute.feminineHygieneProducts, 'rating': 5},
+              {'attribute': Attribute.smell, 'rating': 5},
+              {'attribute': Attribute.handDryingOptions, 'rating': 4},
+            ],
+          },
+        ],
+      },
+      {
+        'name': 'Student Life Center South Entrance',
+        'gender': Gender.unisex,
+        'lat': 40.2474,
+        'lng': -111.6521,
+        'reviews': [
+          {
+            'user': 'demo',
+            'stars': 4,
+            'notes': 'Locker room cleanup crew deserves a medal.',
+            'attributes': [
+              {'attribute': Attribute.smell, 'rating': 4},
+              {'attribute': Attribute.handDryingOptions, 'rating': 5},
+            ],
+          },
+          {
+            'user': 'taylor',
+            'stars': 3,
+            'notes': 'Good mirrors, but the hallway gets cramped.',
+            'attributes': [
+              {'attribute': Attribute.easeOfAccess, 'rating': 3},
+              {'attribute': Attribute.wheelchairAccessibility, 'rating': 4},
+            ],
+          },
+        ],
+      },
+      {
+        'name': 'Science Center Basement Labs',
+        'gender': Gender.male,
+        'lat': 40.2468,
+        'lng': -111.6488,
+        'reviews': [
+          {
+            'user': 'casey',
+            'stars': 2,
+            'notes': 'Functional but could use a deeper clean.',
+            'attributes': [
+              {'attribute': Attribute.smell, 'rating': 2},
+              {'attribute': Attribute.toiletPaperQuality, 'rating': 3},
+              {'attribute': Attribute.easeOfAccess, 'rating': 2},
+            ],
+          },
+          {
+            'user': 'demo',
+            'stars': 3,
+            'notes': 'Appreciate the hooks and sturdy stalls.',
+            'attributes': [
+              {'attribute': Attribute.handDryingOptions, 'rating': 2},
+              {'attribute': Attribute.bidet, 'rating': 1},
+              {'attribute': Attribute.easeOfAccess, 'rating': 3},
+            ],
+          },
+        ],
+      },
+      {
+        'name': 'Fine Arts Pavilion Lobby',
+        'gender': Gender.female,
+        'lat': 40.2495,
+        'lng': -111.6525,
+        'reviews': [
+          {
+            'user': 'taylor',
+            'stars': 5,
+            'notes': 'Feels like a boutique hotel powder room.',
+            'attributes': [
+              {'attribute': Attribute.toiletPaperQuality, 'rating': 4},
+              {'attribute': Attribute.feminineHygieneProducts, 'rating': 5},
+              {'attribute': Attribute.smell, 'rating': 4},
+            ],
+          },
+          {
+            'user': 'casey',
+            'stars': 4,
+            'notes': 'Huge countertops and automatic doors.',
+            'attributes': [
+              {'attribute': Attribute.handDryingOptions, 'rating': 4},
+              {'attribute': Attribute.easeOfAccess, 'rating': 4},
+            ],
           },
         ],
       },
@@ -460,17 +679,40 @@ class LocalSqliteBackend implements BackendAdapter {
         'longitude': restroom['lng'],
       });
 
-      final reviews = (restroom['reviews'] as List)
-          .map((review) => Map<String, Object>.from(review as Map))
-          .toList();
+      final reviews =
+          (restroom['reviews'] as List<dynamic>).cast<Map<String, dynamic>>();
       for (final review in reviews) {
-        await db.insert('review', {
+        final userKey = review['user'] as String?;
+        final userId = userKey != null
+            ? (userIds[userKey] ?? defaultUserId)
+            : defaultUserId;
+
+        final stars = review['stars'] as int;
+        final notes = review['notes'] as String?;
+
+        final reviewId = await db.insert('review', {
           'restroom_id': restroomId,
-          'user_id': demoUserId,
-          'stars': review['stars'],
-          'review_dt': DateTime.now().toIso8601String(),
-          'notes': review['notes'],
+          'user_id': userId,
+          'stars': stars,
+          'review_dt':
+              now.subtract(Duration(days: reviewCounter++)).toIso8601String(),
+          'notes': notes,
         });
+
+        final attributesData =
+            (review['attributes'] as List<dynamic>? ?? const []);
+        for (final attr in attributesData.cast<Map<String, dynamic>>()) {
+          final attributeValue = attr['attribute'];
+          final attributeId = attributeValue is Attribute
+              ? attributeValue.id
+              : attr['attribute_id'] as int;
+          final rating = attr['rating'] as int;
+          await db.insert('review_attribute', {
+            'review_id': reviewId,
+            'attribute_id': attributeId,
+            'rating': rating,
+          });
+        }
       }
     }
   }

@@ -1,61 +1,27 @@
-import 'package:rate_my_bowl/models/attribute_definition.dart';
-import 'package:rate_my_bowl/models/attribute_option.dart';
-import 'package:rate_my_bowl/models/attribute_value_dto.dart';
+import 'package:flutter/material.dart';
 
-class Attribute {
-  final AttributeDefinition definition;
-  final int restroomId;
-  final int? reviewId;
-  final Object value;
+enum Attribute {
+  toiletPaperQuality(1, 'Toilet Paper Quality', Icons.gradient),
+  babyChangingStation(2, 'Baby Changing Station', Icons.baby_changing_station),
+  handDryingOptions(3, 'Hand-Drying Options', Icons.dry),
+  wheelchairAccessibility(4, 'Wheelchair Accessibility', Icons.wheelchair_pickup),
+  feminineHygieneProducts(5, 'Feminine Hygiene Products', Icons.female),
+  easeOfAccess(6, 'Ease of Access', Icons.key),
+  bidet(7, 'Bidet', Icons.shower),
+  smell(8, 'Smell', Icons.local_florist);
 
-  const Attribute({
-    required this.definition,
-    required this.restroomId,
-    this.reviewId,
-    required this.value,
-  }) : assert(
-         value is bool ||
-             value is num ||
-             value is String ||
-             value is AttributeOption,
-         'value must be bool, num, String, or AttributeOption',
-       );
+  final int id;
+  final String displayName;
+  final IconData icon;
 
-  AttributeValueDto toDto() {
-    bool? valueBool;
-    int? valueInt;
-    double? valueDecimal;
-    String? valueText;
-    int? valueOptionId;
+  const Attribute(this.id, this.displayName, this.icon);
 
-    switch (definition.dataType) {
-      case DataType.bool:
-        valueBool = value as bool;
-        break;
-      case DataType.int:
-        valueInt = value as int;
-        break;
-      case DataType.decimal:
-        valueDecimal = (value as num).toDouble();
-        break;
-      case DataType.text:
-        valueText = value as String;
-        break;
-      case DataType.option:
-        final opt = value as AttributeOption;
-        valueOptionId = opt.optionId;
-        break;
+  static Attribute? fromId(int id) {
+    for (final attr in Attribute.values) {
+      if (attr.id == id) return attr;
     }
-
-    return AttributeValueDto(
-      restroomId: restroomId,
-      attrId: definition.attrId,
-      reviewId: reviewId,
-      valueBool: valueBool,
-      valueInt: valueInt,
-      valueDecimal: valueDecimal,
-      valueText: valueText,
-      valueOptionId: valueOptionId,
-    );
+    return null;
   }
+
+  static List<Attribute> get all => Attribute.values;
 }
