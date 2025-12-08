@@ -50,7 +50,10 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Nearby'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.explore_outlined),
+            label: 'Nearby',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Options'),
         ],
       ),

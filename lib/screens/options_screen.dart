@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:rate_my_bowl/screens/credits_screen.dart';
 import 'package:rate_my_bowl/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -196,6 +197,24 @@ class _OptionsScreenState extends State<OptionsScreen> {
               ),
             const SizedBox(height: 8),
             const Spacer(),
+            Center(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CreditsScreen()),
+                  );
+                },
+                child: Text(
+                  "Credits",
+                  style: GoogleFonts.quicksand(
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: _handleLogout,
               icon: const Icon(Icons.logout, color: Colors.white),
