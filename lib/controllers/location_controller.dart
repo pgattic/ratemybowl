@@ -13,6 +13,10 @@ class LocationController extends ChangeNotifier {
   bool _listening = false;
 
   Future<void> init() async {
+    if (status == LocStatus.ready || status == LocStatus.checking) {
+      return;
+    }
+
     status = LocStatus.checking;
     notifyListeners();
 

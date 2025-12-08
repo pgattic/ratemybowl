@@ -35,11 +35,7 @@ class LocalSqliteBackend implements BackendAdapter {
 
     final dbPath = await getDatabasesPath();
     final fullPath = p.join(dbPath, 'ratemybowl_offline.db');
-    _db = await openDatabase(
-      fullPath,
-      version: 1,
-      onCreate: _onCreate,
-    );
+    _db = await openDatabase(fullPath, version: 1, onCreate: _onCreate);
 
     _prefs = await SharedPreferences.getInstance();
     await _restoreSession();
@@ -140,6 +136,7 @@ class LocalSqliteBackend implements BackendAdapter {
     bool? filterMale,
     bool? filterUnisex,
     double? minRating,
+    required minRatingEnabled,
   }) async {
     final restroomsData = await _database.query('restroom');
     final statsRows = await _database.rawQuery('''
@@ -170,8 +167,12 @@ class LocalSqliteBackend implements BackendAdapter {
     ) {
       final dLat = degToRad(lat2 - lat1);
       final dLng = degToRad(lng2 - lng1);
-      final a = sin(dLat / 2) * sin(dLat / 2) +
-          cos(degToRad(lat1)) * cos(degToRad(lat2)) * sin(dLng / 2) * sin(dLng / 2);
+      final a =
+          sin(dLat / 2) * sin(dLat / 2) +
+          cos(degToRad(lat1)) *
+              cos(degToRad(lat2)) *
+              sin(dLng / 2) *
+              sin(dLng / 2);
       final c = 2 * atan2(sqrt(a), sqrt(1 - a));
       return earthRadius * c;
     }
@@ -191,7 +192,8 @@ class LocalSqliteBackend implements BackendAdapter {
       final rating = stat?['avg_rating']?.toDouble() ?? 0.0;
 
       if (filterFemale != null || filterMale != null || filterUnisex != null) {
-        final genderMatches = (filterFemale == true && gender == Gender.female) ||
+        final genderMatches =
+            (filterFemale == true && gender == Gender.female) ||
             (filterMale == true && gender == Gender.male) ||
             (filterUnisex == true && gender == Gender.unisex);
         if (!genderMatches) {
@@ -199,7 +201,7 @@ class LocalSqliteBackend implements BackendAdapter {
         }
       }
 
-      if (minRating != null && rating < minRating) {
+      if (minRatingEnabled && minRating != null && rating < minRating) {
         continue;
       }
 
@@ -241,9 +243,12 @@ class LocalSqliteBackend implements BackendAdapter {
       ''',
       [id],
     );
-    final avgRating = stats.isNotEmpty ? stats.first['avg_rating'] as num? : null;
-    final reviewCount =
-        stats.isNotEmpty ? stats.first['review_count'] as num? : null;
+    final avgRating = stats.isNotEmpty
+        ? stats.first['avg_rating'] as num?
+        : null;
+    final reviewCount = stats.isNotEmpty
+        ? stats.first['review_count'] as num?
+        : null;
 
     return Restroom(
       id: row['restroom_id'] as int,
@@ -307,18 +312,17 @@ class LocalSqliteBackend implements BackendAdapter {
 
     if (reviewIds.isNotEmpty) {
       final placeholders = List.filled(reviewIds.length, '?').join(',');
-      final attrRows = await _database.rawQuery(
-        '''
+      final attrRows = await _database.rawQuery('''
         SELECT review_id, attribute_id, rating
         FROM review_attribute
         WHERE review_id IN ($placeholders)
-        ''',
-        reviewIds,
-      );
+        ''', reviewIds);
 
       for (final attrRow in attrRows) {
         final reviewId = attrRow['review_id'] as int;
-        attributesByReview.putIfAbsent(reviewId, () => []).add(
+        attributesByReview
+            .putIfAbsent(reviewId, () => [])
+            .add(
               ReviewAttribute(
                 reviewId: reviewId,
                 attributeId: attrRow['attribute_id'] as int,
@@ -328,25 +332,21 @@ class LocalSqliteBackend implements BackendAdapter {
       }
     }
 
-    return rows
-        .map(
-          (row) {
-            final reviewId = row['review_id'] as int;
-            return Review(
-              reviewId: reviewId,
-              restroomId: row['restroom_id'] as int,
-              userId: row['user_id'] as String,
-              stars: row['stars'] as int,
-              reviewDt: DateTime.parse(row['review_dt'] as String),
-              notes: row['notes'] as String?,
-              displayName: row['display_name'] as String?,
-              attributes: List<ReviewAttribute>.unmodifiable(
-                attributesByReview[reviewId] ?? const <ReviewAttribute>[],
-              ),
-            );
-          },
-        )
-        .toList();
+    return rows.map((row) {
+      final reviewId = row['review_id'] as int;
+      return Review(
+        reviewId: reviewId,
+        restroomId: row['restroom_id'] as int,
+        userId: row['user_id'] as String,
+        stars: row['stars'] as int,
+        reviewDt: DateTime.parse(row['review_dt'] as String),
+        notes: row['notes'] as String?,
+        displayName: row['display_name'] as String?,
+        attributes: List<ReviewAttribute>.unmodifiable(
+          attributesByReview[reviewId] ?? const <ReviewAttribute>[],
+        ),
+      );
+    }).toList();
   }
 
   @override
@@ -371,7 +371,9 @@ class LocalSqliteBackend implements BackendAdapter {
   }
 
   @override
-  Future<Map<int, double>> getAttributeAveragesByRestroomId(int restroomId) async {
+  Future<Map<int, double>> getAttributeAveragesByRestroomId(
+    int restroomId,
+  ) async {
     final reviewRows = await _database.query(
       'review',
       columns: ['review_id'],
@@ -498,10 +500,7 @@ class LocalSqliteBackend implements BackendAdapter {
     return userIds;
   }
 
-  Future<void> _seedRestrooms(
-    Database db,
-    Map<String, String> userIds,
-  ) async {
+  Future<void> _seedRestrooms(Database db, Map<String, String> userIds) async {
     final defaultUserId = userIds['demo'] ?? userIds.values.first;
     final now = DateTime.now();
     var reviewCounter = 0;
@@ -679,8 +678,8 @@ class LocalSqliteBackend implements BackendAdapter {
         'longitude': restroom['lng'],
       });
 
-      final reviews =
-          (restroom['reviews'] as List<dynamic>).cast<Map<String, dynamic>>();
+      final reviews = (restroom['reviews'] as List<dynamic>)
+          .cast<Map<String, dynamic>>();
       for (final review in reviews) {
         final userKey = review['user'] as String?;
         final userId = userKey != null
@@ -694,8 +693,9 @@ class LocalSqliteBackend implements BackendAdapter {
           'restroom_id': restroomId,
           'user_id': userId,
           'stars': stars,
-          'review_dt':
-              now.subtract(Duration(days: reviewCounter++)).toIso8601String(),
+          'review_dt': now
+              .subtract(Duration(days: reviewCounter++))
+              .toIso8601String(),
           'notes': notes,
         });
 

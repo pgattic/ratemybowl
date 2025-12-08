@@ -30,10 +30,7 @@ class SupabaseBackend implements BackendAdapter {
       );
     }
 
-    await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseKey,
-    );
+    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
 
     _initialized = true;
   }
@@ -99,16 +96,13 @@ class SupabaseBackend implements BackendAdapter {
     bool? filterMale,
     bool? filterUnisex,
     double? minRating,
+    required bool minRatingEnabled,
   }) async {
     _ensureInitialized();
 
     final response = await _client.rpc(
       'get_restrooms_within_radius',
-      params: {
-        'center_lat': lat,
-        'center_lng': lng,
-        'radius_meters': radius,
-      },
+      params: {'center_lat': lat, 'center_lng': lng, 'radius_meters': radius},
     );
 
     final List<Restroom> restrooms = [];
@@ -119,8 +113,11 @@ class SupabaseBackend implements BackendAdapter {
           Map<String, dynamic>.from(row as Map),
         );
         if (restroom != null) {
-          if (filterFemale != null || filterMale != null || filterUnisex != null) {
-            final genderMatches = (filterFemale == true && restroom.gender == Gender.female) ||
+          if (filterFemale != null ||
+              filterMale != null ||
+              filterUnisex != null) {
+            final genderMatches =
+                (filterFemale == true && restroom.gender == Gender.female) ||
                 (filterMale == true && restroom.gender == Gender.male) ||
                 (filterUnisex == true && restroom.gender == Gender.unisex);
             if (!genderMatches) {
@@ -128,7 +125,9 @@ class SupabaseBackend implements BackendAdapter {
             }
           }
 
-          if (minRating != null && restroom.rating < minRating) {
+          if (minRatingEnabled &&
+              minRating != null &&
+              restroom.rating < minRating) {
             continue;
           }
 
@@ -193,7 +192,7 @@ class SupabaseBackend implements BackendAdapter {
       for (final dynamic row in (response as List)) {
         final reviewJson = Map<String, dynamic>.from(row as Map);
         final reviewId = reviewJson['review_id'] as int?;
-        
+
         List<ReviewAttribute> attributes = [];
         if (reviewId != null) {
           try {
@@ -201,28 +200,32 @@ class SupabaseBackend implements BackendAdapter {
                 .from('review_attribute')
                 .select('*')
                 .eq('review_id', reviewId);
-            
+
             for (final attrRow in attrResponse) {
-              attributes.add(ReviewAttribute.fromJson(
-                Map<String, dynamic>.from(attrRow as Map),
-              ));
+              attributes.add(
+                ReviewAttribute.fromJson(
+                  Map<String, dynamic>.from(attrRow as Map),
+                ),
+              );
             }
           } catch (e) {
             debugPrint('Error fetching review attributes: $e');
           }
         }
-        
+
         final review = Review.fromJson(reviewJson);
-        reviews.add(Review(
-          reviewId: review.reviewId,
-          restroomId: review.restroomId,
-          userId: review.userId,
-          stars: review.stars,
-          reviewDt: review.reviewDt,
-          notes: review.notes,
-          displayName: review.displayName,
-          attributes: attributes,
-        ));
+        reviews.add(
+          Review(
+            reviewId: review.reviewId,
+            restroomId: review.restroomId,
+            userId: review.userId,
+            stars: review.stars,
+            reviewDt: review.reviewDt,
+            notes: review.notes,
+            displayName: review.displayName,
+            attributes: attributes,
+          ),
+        );
       }
     }
 
@@ -237,22 +240,28 @@ class SupabaseBackend implements BackendAdapter {
         .insert(review.toJson())
         .select()
         .single();
-    
+
     final reviewId = reviewResponse['review_id'] as int?;
-    
+
     if (reviewId != null && review.attributes.isNotEmpty) {
-      final attributesToInsert = review.attributes.map((attr) => {
-        'review_id': reviewId,
-        'attribute_id': attr.attributeId,
-        'rating': attr.rating,
-      }).toList();
-      
+      final attributesToInsert = review.attributes
+          .map(
+            (attr) => {
+              'review_id': reviewId,
+              'attribute_id': attr.attributeId,
+              'rating': attr.rating,
+            },
+          )
+          .toList();
+
       await _client.from('review_attribute').insert(attributesToInsert);
     }
   }
-  
+
   @override
-  Future<Map<int, double>> getAttributeAveragesByRestroomId(int restroomId) async {
+  Future<Map<int, double>> getAttributeAveragesByRestroomId(
+    int restroomId,
+  ) async {
     _ensureInitialized();
     try {
       final reviews = await getReviewsByRestroomId(restroomId);
@@ -260,20 +269,20 @@ class SupabaseBackend implements BackendAdapter {
           .where((r) => r.reviewId != null)
           .map((r) => r.reviewId!)
           .toList();
-      
+
       if (reviewIds.isEmpty) {
         return {};
       }
-      
+
       final Map<int, List<int>> attributeRatings = {};
-      
+
       for (final reviewId in reviewIds) {
         try {
           final response = await _client
               .from('review_attribute')
               .select('*')
               .eq('review_id', reviewId);
-          
+
           for (final row in response as List) {
             final attrId = row['attribute_id'] as int;
             final rating = row['rating'] as int;
@@ -283,17 +292,17 @@ class SupabaseBackend implements BackendAdapter {
           debugPrint('Error fetching attributes for review $reviewId: $e');
         }
       }
-      
+
       if (attributeRatings.isEmpty) {
         return {};
       }
-      
+
       final Map<int, double> averages = {};
       attributeRatings.forEach((attrId, ratings) {
         final sum = ratings.fold<int>(0, (a, b) => a + b);
         averages[attrId] = sum / ratings.length;
       });
-      
+
       return averages;
     } catch (e) {
       debugPrint('Error fetching attribute averages: $e');
@@ -314,13 +323,15 @@ class SupabaseBackend implements BackendAdapter {
         if (coordinates is Map) {
           latitude = (coordinates['lat'] ?? coordinates['latitude'])
               ?.toDouble();
-          longitude = (coordinates['lng'] ??
-                  coordinates['longitude'] ??
-                  coordinates['lon'])
-              ?.toDouble();
+          longitude =
+              (coordinates['lng'] ??
+                      coordinates['longitude'] ??
+                      coordinates['lon'])
+                  ?.toDouble();
         } else if (coordinates is String) {
-          final match =
-              RegExp(r'POINT\(([-\d.]+)\s+([-\d.]+)\)').firstMatch(coordinates);
+          final match = RegExp(
+            r'POINT\(([-\d.]+)\s+([-\d.]+)\)',
+          ).firstMatch(coordinates);
           if (match != null) {
             longitude = double.tryParse(match.group(1)!);
             latitude = double.tryParse(match.group(2)!);

@@ -19,6 +19,7 @@ abstract class BackendAdapter {
     bool? filterMale,
     bool? filterUnisex,
     double? minRating,
+    required bool minRatingEnabled,
   });
 
   Future<Restroom?> getRestroomById(int id);

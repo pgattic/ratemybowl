@@ -20,6 +20,8 @@ class RestroomService {
       final filterMale = prefs.getBool('filter_male') ?? false;
       final filterUnisex = prefs.getBool('filter_unisex') ?? false;
       final minRating = prefs.getDouble('filter_min_rating') ?? 0.0;
+      final minRatingEnabled =
+          prefs.getBool('filter_min_rating_enabled') ?? false;
 
       final hasGenderFilter = filterFemale || filterMale || filterUnisex;
       final hasRatingFilter = minRating > 0.0;
@@ -32,6 +34,7 @@ class RestroomService {
         filterMale: hasGenderFilter ? filterMale : null,
         filterUnisex: hasGenderFilter ? filterUnisex : null,
         minRating: hasRatingFilter ? minRating : null,
+        minRatingEnabled: minRatingEnabled,
       );
     } catch (e) {
       debugPrint('Error fetching restroom locations: $e');
