@@ -513,7 +513,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton(
-                    onPressed: _isSubmitting ? null : _submitReview,
+                    onPressed: (_isSubmitting || _pendingAttribute != null)
+                        ? null
+                        : _submitReview,
                     child: _isSubmitting
                         ? const SizedBox(
                             width: 20,
