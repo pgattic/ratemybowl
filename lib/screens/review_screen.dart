@@ -42,7 +42,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
   static const int maxSheets = 5;
   bool _isSubmitting = false;
-  
+
   List<Attribute> _allAttributes = [];
   final Map<int, int> _confirmedAttributeRatings = {};
   Attribute? _pendingAttribute;
@@ -58,21 +58,21 @@ class _ReviewScreenState extends State<ReviewScreen> {
     _randomHint = (_hints..shuffle()).first;
     _loadAttributes();
   }
-  
+
   void _loadAttributes() {
     setState(() {
       _allAttributes = AttributeService.instance.attributes;
       _isLoadingAttributes = false;
     });
   }
-  
+
   void _selectPendingAttribute(Attribute attribute) {
     setState(() {
       _pendingAttribute = attribute;
       _pendingRating = 3;
     });
   }
-  
+
   void _confirmPendingAttribute() {
     if (_pendingAttribute != null) {
       setState(() {
@@ -82,26 +82,26 @@ class _ReviewScreenState extends State<ReviewScreen> {
       });
     }
   }
-  
+
   void _cancelPendingAttribute() {
     setState(() {
       _pendingAttribute = null;
       _pendingRating = 3;
     });
   }
-  
+
   void _removeConfirmedAttribute(int attributeId) {
     setState(() {
       _confirmedAttributeRatings.remove(attributeId);
     });
   }
-  
+
   void _updatePendingRating(int rating) {
     setState(() {
       _pendingRating = rating;
     });
   }
-  
+
   List<Attribute> get _availableAttributes {
     final usedIds = _confirmedAttributeRatings.keys.toSet();
     if (_pendingAttribute != null) {
@@ -160,13 +160,15 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
     try {
       final reviewAttributes = _confirmedAttributeRatings.entries
-          .map((entry) => ReviewAttribute(
-                reviewId: 0,
-                attributeId: entry.key,
-                rating: entry.value,
-              ))
+          .map(
+            (entry) => ReviewAttribute(
+              reviewId: 0,
+              attributeId: entry.key,
+              rating: entry.value,
+            ),
+          )
           .toList();
-      
+
       final review = Review(
         restroomId: widget.restroomId!,
         userId: userId,
@@ -264,7 +266,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
               ),
 
               const SizedBox(height: 16),
-              
+
               if (!_isLoadingAttributes && _allAttributes.isNotEmpty) ...[
                 const Padding(
                   padding: EdgeInsets.only(left: 16.0),
@@ -278,8 +280,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                
-                if (_pendingAttribute == null && _availableAttributes.isNotEmpty)
+
+                if (_pendingAttribute == null &&
+                    _availableAttributes.isNotEmpty)
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16.0),
                     decoration: BoxDecoration(
@@ -287,30 +290,42 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: DropdownButton<Attribute>(
+                      onTap: () {
+                        FocusManager.instance.primaryFocus?.unfocus();
+                      },
                       hint: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12.0),
-                        child: Text('Add an attribute...', style: TextStyle(color: Colors.grey)),
+                        child: Text(
+                          'Add an attribute...',
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       ),
                       isExpanded: true,
                       underline: const SizedBox(),
-                      items: (_availableAttributes.toList()
-                        ..sort((a, b) =>
-                            a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase())))
-                          .map((attribute) {
-                        return DropdownMenuItem<Attribute>(
-                          value: attribute,
-                          child: Row(
-                            children: [
-                              Icon(
-                                attribute.icon,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(attribute.displayName, style: const TextStyle(color: Colors.black)),
-                            ],
-                          ),
-                        );
-                      }).toList(),
+                      items:
+                          (_availableAttributes.toList()..sort(
+                                (a, b) => a.displayName.toLowerCase().compareTo(
+                                  b.displayName.toLowerCase(),
+                                ),
+                              ))
+                              .map((attribute) {
+                                return DropdownMenuItem<Attribute>(
+                                  value: attribute,
+                                  child: Row(
+                                    children: [
+                                      Icon(attribute.icon, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        attribute.displayName,
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              })
+                              .toList(),
                       onChanged: (attribute) {
                         if (attribute != null) {
                           _selectPendingAttribute(attribute);
@@ -318,7 +333,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       },
                     ),
                   ),
-                
+
                 if (_pendingAttribute != null)
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -326,10 +341,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.black,
-                        width: 1,
-                      ),
+                      border: Border.all(color: Colors.black, width: 1),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,7 +368,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            const Text('Rating: ', style: TextStyle(color: Colors.grey)),
+                            const Text(
+                              'Rating: ',
+                              style: TextStyle(color: Colors.grey),
+                            ),
                             Expanded(
                               child: Slider(
                                 value: _pendingRating.toDouble(),
@@ -408,9 +423,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       ],
                     ),
                   ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 if (_confirmedAttributeRatings.isNotEmpty) ...[
                   const Padding(
                     padding: EdgeInsets.only(left: 16.0),
@@ -432,67 +447,65 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       })
                       .whereType<({Attribute attribute, int rating})>()
                       .map((item) {
-                    final attribute = item.attribute;
-                    final rating = item.rating;
-                    
-                    return Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 4.0,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: 8.0,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            attribute.icon,
-                            size: 18,
+                        final attribute = item.attribute;
+                        final rating = item.rating;
+
+                        return Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                            vertical: 4.0,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              attribute.displayName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                              ),
-                            ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                            vertical: 8.0,
                           ),
-                          ...List.generate(5, (i) {
-                            return Icon(
-                              i < rating ? Icons.star : Icons.star_border,
-                              color: Colors.amber,
-                              size: 16,
-                            );
-                          }),
-                          const SizedBox(width: 8),
-                          InkWell(
-                            onTap: () => _removeConfirmedAttribute(attribute.id),
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Icon(
-                                Icons.close,
-                                size: 16,
-                                color: Colors.red,
-                              ),
-                            ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        ],
-                      ),
-                    );
-                  }),
+                          child: Row(
+                            children: [
+                              Icon(attribute.icon, size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  attribute.displayName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                              ...List.generate(5, (i) {
+                                return Icon(
+                                  i < rating ? Icons.star : Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 16,
+                                );
+                              }),
+                              const SizedBox(width: 8),
+                              InkWell(
+                                onTap: () =>
+                                    _removeConfirmedAttribute(attribute.id),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
                 ],
-                
+
                 const SizedBox(height: 16),
               ],
 
@@ -501,7 +514,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton(
-                    onPressed: _isSubmitting ? null : _submitReview,
+                    onPressed: (_isSubmitting || _pendingAttribute != null)
+                        ? null
+                        : _submitReview,
                     child: _isSubmitting
                         ? const SizedBox(
                             width: 20,
