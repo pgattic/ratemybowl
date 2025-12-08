@@ -141,7 +141,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Text(style: TextStyle(fontSize: 24.0), "create an account"),
                 ],
               ),
-              CustomInputField(hintText: "email", controller: _emailController),
+              CustomInputField(hintText: "email", controller: _emailController, keyboardType: TextInputType.emailAddress),
               if (!_isEmailValid && _emailController.text.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
