@@ -179,13 +179,11 @@ class _LoginScreenState extends State<LoginScreen>
             left: 0,
             right: 0,
             child: Center(
-              child: TextButton(
-                onPressed: () {
+              child: GestureDetector(
+                onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const CreditsScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const CreditsScreen()),
                   );
                 },
                 child: Text(
