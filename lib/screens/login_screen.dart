@@ -112,6 +112,7 @@ class _LoginScreenState extends State<LoginScreen>
                         CustomInputField(
                           hintText: "email",
                           controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
                         ),
                         const SizedBox(height: 16),
                         CustomInputField(
