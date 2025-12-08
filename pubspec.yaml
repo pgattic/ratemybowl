@@ -71,6 +71,7 @@ flutter:
   assets:
     - assets/
     - assets/sounds/flush.mp3
+    - assets/videos/cute_roll.mp4
     - .env
 
   # The following line ensures that the Material Icons font is
