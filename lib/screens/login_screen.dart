@@ -178,9 +178,19 @@ class _LoginScreenState extends State<LoginScreen>
             left: 0,
             right: 0,
             child: Center(
-              child: Text(
-                '© 2025 Tinkle Thinkers',
-                style: TextStyle(fontSize: 16.0, color: Colors.white),
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CreditsScreen(),
+                    ),
+                  );
+                },
+                child: Text(
+                  "© 2025 Tinkle Thinkers",
+                  style: TextStyle(fontSize: 16.0, color: Colors.white),
+                ),
               ),
             ),
           ),
