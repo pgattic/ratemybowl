@@ -156,8 +156,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
 
               CustomInputField(
-                hintText: "username",
+                hintText: "display name",
                 controller: _usernameController,
+                textCapitalization: TextCapitalization.words,
               ),
               CustomInputField(
                 hintText: "password",

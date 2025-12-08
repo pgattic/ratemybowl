@@ -255,6 +255,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 child: CustomInputField(
                   hintText: _randomHint,
                   controller: _controller,
+                  textCapitalization: TextCapitalization.sentences,
                   minLines: 4,
                   maxLines: 8,
                   borderRadius: 16,

@@ -98,6 +98,7 @@ class _AddingRestroomScreenState extends State<AddingRestroomScreen> {
             CustomInputField(
               hintText: "Restroom name",
               controller: _nameController,
+              textCapitalization: TextCapitalization.words,
               borderRadius: 16.0,
               maxLength: 50,
             ),
