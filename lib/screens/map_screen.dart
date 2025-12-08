@@ -242,7 +242,10 @@ class _MapScreenState extends State<MapScreen> {
                       _selectedRestroom = restroom;
                     });
 
-                    _centerOn(restroom.coordinates);
+                    _centerOn(
+                      restroom.coordinates,
+                      zoom: _mapController.camera.zoom,
+                    );
 
                     showModalBottomSheet(
                           context: context,
