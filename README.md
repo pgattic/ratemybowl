@@ -1,5 +1,7 @@
 
-# 🚽 Rate My Bowl
+# 🚽 Rate My Bowl 🧻
+
+By the Tinkle Thinkers
 
 *Rest in That Room*™
 
