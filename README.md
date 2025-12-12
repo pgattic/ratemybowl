@@ -7,17 +7,22 @@ Everyone has been through the pain of having to use a subpar restroom. It always
 
 ## Summary of features
 
-Just what the name implies. Rate, review, and discover public restrooms on the go! This app allows you to pan around on a map and see all the available restrooms, each displaying their average rating, out of 5 stars. In your reviews, you can report the following, each up to 5 stars:
+Rate, review, and discover public restrooms on the go! The purpose of this app is to help you find just the right restroom for your needs. You can also report on restrooms that you have visited, including rating each one up to 5 stars on the following metrics:
 
 - Baby Changing Station
 - Bidet
 - Ease of Access
 - Feminine Hygiene Products
 - Hand-Drying Options
-- Personal Space
 - Smell
 - Toilet Paper Quality
 - Wheelchair Accessibility
+
+There is a map screen where you can freely pan around and see what's near you. This is great for when you need to find something quick!
+
+If you want to be more careful about where you go, there is a "Near Me" screen that lets you more easily compare features and reviews of nearby restrooms.
+
+If you're having a hard time finding the one for you, check out the "Options" screen, where you can apply filters for what you see in either of the other screens.
 
 ## Screenshots
 
