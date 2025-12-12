@@ -46,23 +46,26 @@ If you're having a hard time finding the one for you, check out the "Options" sc
 
 - `nix develop`
 
-This will provide a dev shell with a preconfigured Android emulator and system image, Flutter, Android SDK and cmdline-tools, the `firebase-tools` package, and more. Thanks to PlayXDead for his awesome [example flake](https://github.com/PlayXDead/nix-flake-flutter-android-dev-env), off of which ours is based ([Reddit post](https://www.reddit.com/r/NixOS/comments/1ngt889/my_first_flake_flutterandroid_dev_enviroment_with/)).
+This will provide a dev shell with a preconfigured Android emulator and system image, Flutter, Android SDK and cmdline-tools, and more. Thanks to PlayXDead for his awesome [example flake](https://github.com/PlayXDead/nix-flake-flutter-android-dev-env), off of which ours is based ([Reddit post](https://www.reddit.com/r/NixOS/comments/1ngt889/my_first_flake_flutterandroid_dev_enviroment_with/)).
 
 ### Windows
 
-- Follow the [Windows -> Android instructions](https://docs.flutter.dev/get-started/install/windows/mobile) on the Flutter documentation
-- Install the [Firebase CLI](https://firebase.google.com/docs/cli)
+- Follow the Windows instructions in the [Flutter Get Started](https://docs.flutter.dev/get-started) documentation
 
 ### MacOS
 
-- Follow the [MacOS instructions](https://docs.flutter.dev/get-started/install/macos) on the Flutter Documentation (choose between iOS and Android)
-- Install the [Firebase CLI](https://firebase.google.com/docs/cli)
+- Follow the MacOS instructions in the [Flutter Get Started](https://docs.flutter.dev/get-started) documentation
 
 ### Backend modes
 
 The app can be compiled to run against either Supabase or a fully offline SQLite database. By default Supabase is used, but you can swap backends at compile time with the `USE_SUPABASE` flag:
 
 ```bash
+# For normal (Supabase) version
+flutter run
+flutter build apk
+
+# For local-only (SQLite) version
 flutter run --dart-define=USE_SUPABASE=false
 flutter build apk --dart-define=USE_SUPABASE=false
 ```
