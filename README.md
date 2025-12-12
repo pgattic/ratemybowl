@@ -7,33 +7,25 @@ Everyone has been through the pain of having to use a subpar restroom. It always
 
 ## Summary of features
 
-Just what the name implies. Rate, review, and discover public restrooms on the go! Will allow you to pan around on a map and see all the available restrooms, each displaying their average rating, out of 5 stars. You will also be able to add a restroom to the map, or add a review to an existing one. You will be able to report the following information in each review:
+Just what the name implies. Rate, review, and discover public restrooms on the go! This app allows you to pan around on a map and see all the available restrooms, each displaying their average rating, out of 5 stars. In your reviews, you can report the following, each up to 5 stars:
 
-- Overall cleanliness (out of 5 stars)
-- Toilet paper quality (out of 5 stars)
-- Notes about the restroom (text)
-
-In addition, the following general information will be gathered about each restroom, and asked alongside the reviewing process:
-
-- Type of sink (automatic with a sensor or manual with knobs)
-- Hand-drying options (air blower, paper towel, or both)
-- Does it require a key (i.e. from the receptionist's desk)
-
-## Backend modes
-
-The app can now run against either Supabase or a fully offline SQLite database.
-By default Supabase is used, but you can swap backends at compile time with the `USE_SUPABASE` flag:
-
-```bash
-flutter run --dart-define=USE_SUPABASE=false
-flutter build apk --dart-define=USE_SUPABASE=false
-```
+- Baby Changing Station
+- Bidet
+- Ease of Access
+- Feminine Hygiene Products
+- Hand-Drying Options
+- Personal Space
+- Smell
+- Toilet Paper Quality
+- Wheelchair Accessibility
 
 When `USE_SUPABASE=false`, the app boots a local SQLite database that mirrors the schema defined in `schema.sql`, seeds a few default restrooms, and includes a demo account (`demo@ratemybowl.app` / `Password123`). You can sign up for additional offline accounts and everything (reviews, new restrooms, auth state) is stored locally so it works without a network connection.
 
-## Roadmap
+## Screenshots
 
-The Roadmap can be viewed [here](roadmap.md).
+| Login Screen | Map Screen | Reviews Popup | Review Screen | Nearby Screen | Options Screen |
+| - | - | - | - | - | - |
+| ![Login Screen](screenshots/login_screen.png) | ![Map Screen](screenshots/map_screen.png) | ![Reviews Popup](screenshots/reviews.png) | ![Review Screen](screenshots/review_screen.png) | ![Nearby Screen](screenshots/nearby_screen.png) | ![Options Screen](screenshots/options_screen.png) |
 
 ## Dev Environment
 
@@ -53,9 +45,16 @@ This will provide a dev shell with a preconfigured Android emulator and system i
 - Follow the [MacOS instructions](https://docs.flutter.dev/get-started/install/macos) on the Flutter Documentation (choose between iOS and Android)
 - Install the [Firebase CLI](https://firebase.google.com/docs/cli)
 
+### Backend modes
+
+The app can be compiled to run against either Supabase or a fully offline SQLite database. By default Supabase is used, but you can swap backends at compile time with the `USE_SUPABASE` flag:
+
+```bash
+flutter run --dart-define=USE_SUPABASE=false
+flutter build apk --dart-define=USE_SUPABASE=false
+```
+
 ## Contributing
 
-- Please DO NOT COMMIT DIRECTLY TO MASTER
-    - This *will* result in merge conflicts
-    - Either create a new branch for a specific feature you're working on, or maintain your personal branch that you merge into master from
-- Before making any pull requests to Master, ensure that you are able to run `flutter clean` and `flutter run` without any compilation issues or instant crashes. Thank you!
+- Before making any pull requests to `master`, ensure that you are able to run `flutter clean` and `flutter run` without any compilation issues or instant crashes. Thank you!
+
