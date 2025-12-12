@@ -1,5 +1,5 @@
 
-# Rate My Bowl (Yelp but for Public Restrooms)
+# 🚽 Rate My Bowl
 
 *Rest in That Room*™
 
@@ -19,15 +19,21 @@ Just what the name implies. Rate, review, and discover public restrooms on the g
 - Toilet Paper Quality
 - Wheelchair Accessibility
 
-When `USE_SUPABASE=false`, the app boots a local SQLite database that mirrors the schema defined in `schema.sql`, seeds a few default restrooms, and includes a demo account (`demo@ratemybowl.app` / `Password123`). You can sign up for additional offline accounts and everything (reviews, new restrooms, auth state) is stored locally so it works without a network connection.
-
 ## Screenshots
 
-| Login Screen | Map Screen | Reviews Popup | Review Screen | Nearby Screen | Options Screen |
-| - | - | - | - | - | - |
-| ![Login Screen](screenshots/login_screen.png) | ![Map Screen](screenshots/map_screen.png) | ![Reviews Popup](screenshots/reviews.png) | ![Review Screen](screenshots/review_screen.png) | ![Nearby Screen](screenshots/nearby_screen.png) | ![Options Screen](screenshots/options_screen.png) |
+| Login Screen | Map Screen | Reviews Popup |
+| - | - | - |
+| ![Login Screen](screenshots/login_screen.png) | ![Map Screen](screenshots/map_screen.png) | ![Reviews Popup](screenshots/reviews.png) |
+
+| Review Screen | Nearby Screen | Options Screen |
+| - | - | - |
+| ![Review Screen](screenshots/review_screen.png) | ![Nearby Screen](screenshots/nearby_screen.png) | ![Options Screen](screenshots/options_screen.png) |
 
 ## Dev Environment
+
+- `git clone https://github.com/pgattic/ratemybowl && cd ratemybowl`
+- Ensure a Supabase backend is prepared, can copy the contents of `schema.sql` into it for correct initialization (or just build local version, see [Backend Modes](#backend-modes)).
+- Add Supabase auth keys to `.env` file at root of repo, containing the keys `SUPABASE_URL`, `SUPABASE_KEY`, and `DATABASE_PASSWORD` (if using Supabase backend)
 
 ### Nix (with Flakes enabled)
 
@@ -53,6 +59,8 @@ The app can be compiled to run against either Supabase or a fully offline SQLite
 flutter run --dart-define=USE_SUPABASE=false
 flutter build apk --dart-define=USE_SUPABASE=false
 ```
+
+When `USE_SUPABASE=false`, the app boots a local SQLite database that mirrors the schema defined in `schema.sql`, seeds a few default restrooms, and includes a demo account (`demo@ratemybowl.app` / `Password123`). You can sign up for additional offline accounts and everything (reviews, new restrooms, auth state) is stored locally so it works without a network connection.
 
 ## Contributing
 
