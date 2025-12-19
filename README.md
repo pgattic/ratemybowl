@@ -63,7 +63,7 @@ The app can be compiled to run against either Supabase or a fully offline SQLite
 ```bash
 # For normal (Supabase) version
 flutter run
-flutter build apk
+flutter build apk # Android build
 
 # For local-only (SQLite) version
 flutter run --dart-define=USE_SUPABASE=false
@@ -74,5 +74,5 @@ When `USE_SUPABASE=false`, the app boots a local SQLite database that mirrors th
 
 ## Contributing
 
-- Before making any pull requests to `master`, ensure that you are able to run `flutter clean` and `flutter run` without any compilation issues or instant crashes. Thank you!
+Before making any pull requests to `master`, ensure that you are able to run `flutter clean` and `flutter run` without any compilation issues or instant crashes. Thank you!
 
