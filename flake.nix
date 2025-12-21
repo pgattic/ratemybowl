@@ -240,7 +240,6 @@
             ninja
             python3
             jdk17
-            firebase-tools
             nix-ld
             gradle
             patchedFlutter
